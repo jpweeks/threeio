@@ -1,5 +1,6 @@
 import math
 import mathutils
+import bpy
 from bpy import data, context, types
 from .. import constants, logger, utilities
 from .constants import (
@@ -202,9 +203,22 @@ def visible(obj):
     return obj.is_visible(context.scene)
 
 
-def extract_mesh(obj, options):
+def extract_mesh(obj, options, recalculate=False):
     logger.debug('object.extract_mesh(%s, %s)', obj, options)
     mesh = obj.to_mesh(context.scene, True, RENDER)
+
+    if recalculate:
+        logger.info('Recalculating normals')
+        original_mesh = obj.data
+        obj.data = mesh
+
+        bpy.context.scene.objects.active = obj
+        bpy.ops.object.mode_set(mode='EDIT')
+        bpy.ops.mesh.select_all(action='SELECT')
+        bpy.ops.mesh.normals_make_consistent()
+        bpy.ops.object.editmode_toggle()
+
+        obj.data = original_mesh
 
     if not options.get(constants.SCENE):
         xrot = mathutils.Matrix.Rotation(-math.pi/2, 4, 'X')
@@ -249,7 +263,7 @@ def prep_meshes(options):
 
         if len(obj.modifiers):
             logger.info('%s has modifiers' % obj.name)
-            mesh = extract_mesh(obj, options)
+            mesh = extract_mesh(obj, options, recalculate=True)
             _MESH_MAP[mesh.name] = [obj]
             continue
 

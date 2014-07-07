@@ -49,10 +49,10 @@ DEBUG = 'debug'
 EXPORT_OPTIONS = {
     FACES: True,
     VERTICES: True,
-    NORMALS: True,
-    UVS: True,
+    NORMALS: False,
+    UVS: False,
     COLORS: False,
-    MATERIALS: True,
+    MATERIALS: False,
     FACE_MATERIALS: False,
     SCALE: 1,
     FRAME_STEP: 1,
