@@ -35,7 +35,7 @@ ThreeIO.jsonParser = function ( url ) {
 ThreeIO.loadTexture = function ( url, callback ) {
 
     var compressed = /\.dds$/i;
-    var mapping = THREE.UVMapping; //@TODO?
+    var mapping = THREE.UVMapping;
     var texture;
     
     if ( url instanceof Array ) {

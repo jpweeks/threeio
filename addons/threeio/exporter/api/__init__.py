@@ -1,6 +1,5 @@
 import os
 import bpy
-from bpy.app.handlers import persistent
 from . import object, mesh, material, camera, light
 from .. import logger
 
@@ -17,7 +16,6 @@ def selected_objects(valid_types):
             yield node.name
 
 
-@persistent
 def scene_name():
     return os.path.basename(bpy.data.filepath)
 
