@@ -162,10 +162,13 @@ class Geometry(base_classes.BaseNode):
         logger.debug('Geometry().register_textures()')
         return api.mesh.texture_registration(self.node) 
 
-    def write(self):
-        logger.debug('Geometry().write(compress=%s)', compress)
-        io.dump(self.parent.filepath, self.copy(scene=False), 
-            options=options) 
+    def write(self, filepath=None):
+        logger.debug('Geometry().write(filepath=%s)', filepath)
+
+        filepath = filepath or self.scene.filepath
+
+        io.dump(filepath, self.copy(scene=False), 
+            options=self.scene.options) 
 
         if self.options.get(constants.MAPS):
             logger.info('Copying textures for %s', self.node)

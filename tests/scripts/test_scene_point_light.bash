@@ -6,5 +6,5 @@ cd $DIR
 source setup_test_env.bash
 blender --background $BLEND/scene_point_light.blend \
     --python $PYSCRIPT -- $TMP_JSON --vertices --faces --scene \
-    --lights --materials
+    --lights --materials --embed
 testjson $@ --tag $(tagname)

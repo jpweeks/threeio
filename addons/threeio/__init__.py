@@ -95,6 +95,7 @@ def save_settings_export(properties):
         constants.COPY_TEXTURES: properties.option_copy_textures,
 
         constants.SCENE: properties.option_export_scene,
+        constants.EMBED: properties.option_embed_meshes,
         constants.LIGHTS: properties.option_lights,
         constants.CAMERAS: properties.option_cameras,
 
@@ -164,8 +165,8 @@ def restore_settings_export(properties):
     ## Scene {
     properties.option_export_scene = settings.get(
         constants.SCENE, constants.EXPORT_OPTIONS[constants.SCENE])
-    #properties.option_embed_meshes = settings.get(
-    #    'option_embed_meshes', True)
+    properties.option_embed_meshes = settings.get(
+        constants.EMBED, constants.EXPORT_OPTIONS[constants.EMBED])
     properties.option_lights = settings.get(
         constants.LIGHTS, constants.EXPORT_OPTIONS[constants.LIGHTS])
     properties.option_cameras = settings.get(
@@ -285,10 +286,10 @@ class ExportThreeIO(bpy.types.Operator, ExportHelper):
         description='Export scene', 
         default=constants.EXPORT_OPTIONS[constants.SCENE])
 
-    #option_embed_meshes = BoolProperty(
-    #    name='Embed meshes', 
-    #    description='Embed meshes', 
-    #    default=constants.EXPORT_OPTIONS[constants.OPTION.EMBED])
+    option_embed_meshes = BoolProperty(
+        name='Embed meshes', 
+        description='Embed meshes', 
+        default=constants.EXPORT_OPTIONS[constants.EMBED])
 
     option_copy_textures = BoolProperty(
         name='Copy textures', 
@@ -415,7 +416,7 @@ class ExportThreeIO(bpy.types.Operator, ExportHelper):
 
         row = layout.row()
         row.prop(self.properties, 'option_export_scene')
-        #row.prop(self.properties, 'option_embed_meshes')
+        row.prop(self.properties, 'option_embed_meshes')
 
         row = layout.row()
         row.prop(self.properties, 'option_lights')

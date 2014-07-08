@@ -6,5 +6,5 @@ cd $DIR
 source setup_test_env.bash
 blender --background $BLEND/scene_perspective_camera.blend \
     --python $PYSCRIPT -- $TMP_JSON --vertices --faces --scene \
-    --cameras --materials
+    --cameras --materials --embed
 testjson $@ --tag $(tagname)

@@ -66,11 +66,12 @@ ThreeIO.Loader = function ( ) {
 
     var scope = this;
 
-    this._urlHandlers[ 'geometry' ] =  function ( url, onLoad ) {
+    this._urlHandlers[ 'geometry' ] =  function ( data, onLoad ) {
         
-        ThreeIO.jsonParser( url ).then ( function ( response ) {
+        ThreeIO.jsonParser( data.url ).then ( function ( response ) {
 
-            scope.parse( JSON.parse ( response ), onLoad );
+            onLoad( JSON.parse( response ), data.uuid );
+
 
         }, function ( error ) {
         
@@ -79,9 +80,9 @@ ThreeIO.Loader = function ( ) {
         } );
     };
 
-    this._urlHandlers[ 'image' ] = function ( url, callback ) {
+    this._urlHandlers[ 'image' ] = function ( data, callback ) {
 
-        ThreeIO.loadTexture( url, function ( texture ) {
+        ThreeIO.loadTexture( data.url, function ( texture ) {
         
             callback( texture );
         
@@ -94,11 +95,6 @@ ThreeIO.Loader = function ( ) {
 ThreeIO.Loader.prototype.parse = function ( data, onLoad ) {
 
     var textures = {};
-    var nodes = {
-        objects: [],
-        materials: [],
-        geometries: []
-    };
 
     var scope = this;
     var parseNodes = function ( textures ) {
@@ -106,11 +102,22 @@ ThreeIO.Loader.prototype.parse = function ( data, onLoad ) {
         var materials = scope.parseMaterials( 
             data.materials, textures );
         
-		var geometries = scope.parseGeometries( data.geometries );
+        var geometries = {};
+		scope.parseGeometries( data.geometries, function ( geometry ) {
 
-        var object = scope.parseObject( data.object, geometries, materials );
+            geometries[ geometry.uuid ] = geometry;
+            var processed = Object.keys( geometries ).length;
 
-        onLoad( object );
+            if ( processed == data.geometries.length ) {
+            
+                var object = scope.parseObject( data.object, 
+                    geometries, materials );
+
+                onLoad( object );
+
+            }
+
+        } );
 
     };
 
@@ -317,25 +324,47 @@ ThreeIO.Loader.prototype.parseObject = function () {
 }()
 
 
-ThreeIO.Loader.prototype.parseGeometries = function ( geometries ) {
-
-    var loaded = {};
+ThreeIO.Loader.prototype.parseGeometries = function ( geometries, onLoad ) {
 
     var loader = new THREE.JSONLoader();
+
     for ( i = 0; i < geometries.length; i ++ ) {
 
         var data = geometries[ i ];
-        var geometry = loader.parse( data.data ).geometry;
 
-        geometry.uuid = data.uuid;
+        if ( data.data !== undefined ) {
 
-        if ( data.name !== undefined ) geometry.name = data.name;
+            var geometry = loader.parse( data.data ).geometry;
 
-        loaded[ data.uuid ] = geometry;
+            geometry.uuid = data.uuid;
+
+            if ( data.name !== undefined ) geometry.name = data.name;
+
+            onLoad( geometry );
+
+        } else if ( data.url !== undefined ) {
+        
+            var uuid = data.uuid;
+
+            this._urlHandlers.geometry( data, function ( geom, uuid ) {
+
+                var geometry = loader.parse( geom ).geometry;
+
+                geometry.uuid = uuid;
+
+                if ( geom.name !== undefined ) geometry.name = geom.name;
+    
+                onLoad( geometry );
+
+            } );
+
+        } else {
+
+            console.error('unrecognized geometry definitions');
+
+        }
 
     }
-
-    return loaded;
 
 }
 
@@ -447,7 +476,7 @@ ThreeIO.Loader.prototype.parseTextures = function ( json, callback ) {
 
             if ( image.uuid != data.image ) continue;
 
-            urlHandler( image.url, function ( texture ) {
+            urlHandler( image, function ( texture ) {
                 
                 updateAttributes( texture, data );
             

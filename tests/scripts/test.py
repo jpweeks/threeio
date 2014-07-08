@@ -71,6 +71,17 @@ def copy_for_review(tmp_json, tag):
         shutil.move(texture, dst)
         print('moving %s > %s' % (texture, dst))
 
+    if data['metadata']['type'] == 'Object':
+        print('looking for non-embedded geometry')
+        for geometry in data['geometries']:
+            url = geometry.get('url')
+            if not url: continue
+            src = os.path.join(dir_tmp, url)
+            dst = os.path.join(tag_dir, url)
+            print('moving %s > %s' % (src, dst))
+            shutil.move(src, dst)
+
+
 def _parse_geometry_materials(materials):
     maps = ('mapDiffuse', 'mapSpecular', 'mapBump',
         'mapLight', 'mapNormal')
@@ -92,25 +103,6 @@ def create_template(tag_dir, filename):
     with open(html_path, 'w') as stream:
         stream.write(html)
     os.chmod(html_path, MASK)
-
-
-def _remove_uuid(new, old):
-    for key, value in old.items():
-        if key == 'uuid': continue
-
-        if isinstance(value, list):
-            new[key] = []
-            for val in value:
-                if isinstance(val, dict):
-                    new[key].append({})
-                    _remove_uuid(new[key][-1], val)
-                else:
-                    new[key].append(val)
-        elif isinstance(value, dict):
-            new[key] = {}
-            _remove_uuid(new[key], value)
-        else:
-            new[key] = value
 
 
 def main():

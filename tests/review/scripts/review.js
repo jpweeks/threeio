@@ -115,6 +115,8 @@ function loadData( data, url ) {
 
         }
 
+        animate();
+
 
     } else if ( data.metadata.type == 'Object' ) { 
 
@@ -138,6 +140,8 @@ function loadData( data, url ) {
 
             } );
 
+            animate();
+
         };
 
         var loader = new ThreeIO.Loader();
@@ -148,8 +152,6 @@ function loadData( data, url ) {
         throw 'wtf did you pass me?';
     
     }
-
-    animate();
 
 }
 

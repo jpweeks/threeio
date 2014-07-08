@@ -1,3 +1,4 @@
+import os
 from . import (
     base_classes,
     constants,
@@ -75,8 +76,29 @@ class Scene(base_classes.BaseScene):
         logger.debug('Scene().write()')
         data = {}
         
+        print(self.options)
         for key, value in self.items():
-            if isinstance(value, list):
+            if key == constants.GEOMETRIES and \
+            not self.options[constants.EMBED]:
+                geometries = []
+                for geometry in value:
+                    geom_data = geometry.copy()
+                    geom_data.pop(constants.DATA)
+
+                    dirname = os.path.dirname(self.filepath)
+                    #@TODO: extension will need to change when 
+                    #       compresion is implemented
+                    url = 'geometry.%s.%s' % (geometry.node, 
+                        constants.JSON)
+                    geometry_file = os.path.join(dirname, url)
+
+                    geometry.write(filepath=geometry_file)
+                    geom_data[constants.URL] = os.path.basename(url)
+
+                    geometries.append(geom_data)
+
+                data[key] = geometries
+            elif isinstance(value, list):
                 data[key] = []
                 for each in value:
                     data[key].append(each.copy())
