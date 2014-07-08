@@ -264,6 +264,8 @@ class ExportThreeIO(bpy.types.Operator, ExportHelper):
 
     option_round_value = IntProperty(
         name='Precision',
+        min=0,
+        max=16,
         description='Floating point precision',
         default=constants.EXPORT_OPTIONS[constants.ROUND_VALUE])
 
