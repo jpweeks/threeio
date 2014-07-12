@@ -5,5 +5,6 @@ cd $DIR
 
 source setup_test_env.bash
 blender --background $BLEND/scene_maps.blend --python $PYSCRIPT -- \
-    $TMP_JSON --vertices --faces --scene --materials --maps --uvs --embed
+    $TMP_JSON --vertices --faces --scene --materials --maps \
+    --uvs --embed --copyTextures
 testjson $@ --tag $(tagname)

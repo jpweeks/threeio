@@ -420,7 +420,8 @@ ThreeIO.Loader.prototype.parseMaterials = function ( materials, textures ) {
 ThreeIO.Loader.prototype.parseTextures = function ( json, callback ) {
 
     var urlHandler = this._urlHandlers.image;
-    var values = [ 'anisotropy', 'repeat', 'offset', 'name', 'flipY'];
+    var values = [ 'anisotropy', 'name', 'flipY'];
+    var vector2 = [ 'repeat', 'offset' ];
     var keys = [ 'mapping', 'magFilter', 'minFilter' ];
 
     var updateAttributes = function( texture, data ) {
@@ -428,7 +429,7 @@ ThreeIO.Loader.prototype.parseTextures = function ( json, callback ) {
         texture[ 'uuid' ] = data.uuid;
 
         for ( k = 0; k < values.length; k ++ ) {
-            break;
+
             var value = values[ k ];
             if ( data[ value ] !== undefined ) {
 
@@ -439,7 +440,7 @@ ThreeIO.Loader.prototype.parseTextures = function ( json, callback ) {
         }
 
         for ( k = 0; k < keys.length; k ++ ) {
-            break;
+
             var key = keys[ k ];
             if ( data[ key ] !== undefined ) {
 
@@ -450,16 +451,22 @@ ThreeIO.Loader.prototype.parseTextures = function ( json, callback ) {
 
         }
 
+        for ( k = 0; k < vector2.length; k ++ ) {
+
+            var key = vector2[ k ];
+            if ( data[ key ] !== undefined ) {
+            
+                var val = data[ key ];
+                texture[ key ].set(val[ 0 ], val[ 1 ]);
+
+            }
+
+        }
+
         if ( data.wrap !== undefined ) {
 
             texture.wrapS = THREE[ data.wrap[ 0 ] ];
             texture.wrapT = THREE[ data.wrap[ 1 ] ];
-
-        }
-
-        if ( data.repeat !== undefined ) {
-        
-            texture.repeat.set(data.repeat[ 0 ], data.repeat[ 1 ]);
 
         }
 

@@ -34,19 +34,18 @@ def _blending_types(index):
         constants.BLENDING.MULTIPLY, constants.BLENDING.CUSTOM)
     return (types[index], types[index], types[index])
 
-bpy.types.Material.THREE_blending_type = EnumProperty(
+bpy.types.Material.threeio_blending_type = EnumProperty(
     name='Blending type', 
     description='Blending type', 
     items=[_blending_types(x) for x in range(5)], 
     default=constants.BLENDING.NORMAL)
 
-bpy.types.Material.THREE_depth_write = BoolProperty(default=True)
-bpy.types.Material.THREE_depth_test = BoolProperty(default=True)
-
+bpy.types.Material.threeio_depth_write = BoolProperty(default=True)
+bpy.types.Material.threeio_depth_test = BoolProperty(default=True)
 
 class MATERIAL_PT_hello(bpy.types.Panel):
 
-    bl_label = 'THREE'
+    bl_label = 'ThreeIO'
     bl_space_type = 'PROPERTIES'
     bl_region_type = 'WINDOW'
     bl_context = 'material'
@@ -59,14 +58,87 @@ class MATERIAL_PT_hello(bpy.types.Panel):
         row.label(text='Selected material: %s' % mat.name )
 
         row = layout.row()
-        row.prop(mat, 'THREE_blending_type', text='Blending type' )
+        row.prop(mat, 'threeio_blending_type', 
+            text='Blending type' )
 
         row = layout.row()
-        row.prop(mat, 'THREE_depth_write', text='Enable depth writing' )
+        row.prop(mat, 'threeio_depth_write', 
+            text='Enable depth writing' )
 
         row = layout.row()
-        row.prop(mat, 'THREE_depth_test', text='Enable depth testing' )
+        row.prop(mat, 'threeio_depth_test', 
+            text='Enable depth testing' )
 
+def _mag_filters(index):
+    types = (constants.LINEAR_FILTERS.LINEAR,
+        constants.NEAREST_FILTERS.NEAREST)
+    return (types[index], types[index], types[index])
+
+bpy.types.Texture.threeio_mag_filter = EnumProperty(
+    name='Mag Filter',
+    items = [_mag_filters(x) for x in range(2)],
+    default=constants.LINEAR_FILTERS.LINEAR)
+
+def _min_filters(index):
+    types = (constants.LINEAR_FILTERS.LINEAR,
+        constants.LINEAR_FILTERS.MIP_MAP_NEAREST,
+        constants.LINEAR_FILTERS.MIP_MAP_LINEAR,
+        constants.NEAREST_FILTERS.NEAREST,
+        constants.NEAREST_FILTERS.MIP_MAP_NEAREST,
+        constants.NEAREST_FILTERS.MIP_MAP_LINEAR)
+    return (types[index], types[index], types[index])
+
+bpy.types.Texture.threeio_min_filter = EnumProperty(
+    name='Min Filter',
+    items = [_min_filters(x) for x in range(6)],
+    default=constants.LINEAR_FILTERS.MIP_MAP_LINEAR)
+
+def _mapping(index):
+    types = (constants.MAPPING.UV,
+        constants.MAPPING.CUBE_REFLECTION,
+        constants.MAPPING.CUBE_REFRACTION,
+        constants.MAPPING.SPHERICAL_REFLECTION,
+        constants.MAPPING.SPHERICAL_REFRACTION)
+    return (types[index], types[index], types[index])
+
+bpy.types.Texture.threeio_mapping = EnumProperty(
+    name='Mapping',
+    items = [_mapping(x) for x in range(5)],
+    default=constants.MAPPING.UV)
+
+class TEXTURE_PT_hello(bpy.types.Panel):
+    bl_label = 'ThreeIO'
+    bl_space_type = 'PROPERTIES'
+    bl_region_type = 'WINDOW'
+    bl_context = 'texture'
+
+    def draw(self, context):
+        layout = self.layout
+        tex = context.texture
+
+        row = layout.row()
+        row.prop(tex, 'threeio_mapping', text='Mapping')
+
+        row = layout.row()
+        row.prop(tex, 'threeio_mag_filter', text='Mag Filter')
+
+        row = layout.row()
+        row.prop(tex, 'threeio_min_filter', text='Min Filter')
+
+bpy.types.Object.threeio_export = bpy.props.BoolProperty(default=True)
+
+class OBJECT_PT_hello(bpy.types.Panel):
+    bl_label = 'ThreeIO'
+    bl_space_type = 'PROPERTIES'
+    bl_region_type = 'WINDOW'
+    bl_context = 'object'
+
+    def draw(self, context):
+        layout = self.layout
+        obj = context.object
+
+        row = layout.row()
+        row.prop(obj, 'threeio_export', text='Export')
 
 def get_settings_fullpath():
     return os.path.join(bpy.app.tempdir, SETTINGS_FILE_EXPORT)
@@ -425,9 +497,9 @@ class ExportThreeIO(bpy.types.Operator, ExportHelper):
         row.prop(self.properties, 'option_cameras')
         ## }
 
-        ## Animation {
         layout.separator()
 
+        ## Animation {
         row = layout.row()
         row.label(text='Animation:')
 

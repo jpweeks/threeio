@@ -145,7 +145,11 @@ def node_type(obj):
 
 def nodes(valid_types):
     for obj in data.objects:
-        if obj.type in valid_types:
+        try:
+            export = obj.threeio_export
+        except AttributeError:
+            export = True
+        if obj.type in valid_types and export:
             yield obj.name
 
 

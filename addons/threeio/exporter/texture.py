@@ -20,6 +20,12 @@ class Texture(base_classes.BaseNode):
         if constants.WRAPPING.REPEAT in self[constants.WRAP]:
             self[constants.REPEAT] = api.texture.repeat(self.node)
 
+        self[constants.ANISOTROPY] = api.texture.anisotropy(self.node)
+        self[constants.MAG_FILTER] = api.texture.mag_filter(self.node)
+        self[constants.MIN_FILTER] = api.texture.min_filter(self.node)
+        self[constants.MAPPING] = api.texture.mapping(self.node)
+
+
     @property
     def image(self):
         return self.scene.image(self[constants.IMAGE])

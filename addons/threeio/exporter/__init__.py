@@ -30,6 +30,8 @@ def _error_handler(func):
             print('Error recorded to %s' % logger.LOG_FILE)
 
             raise
+        else:
+            print('Log: %s' % logger.LOG_FILE)
 
     return inner
 

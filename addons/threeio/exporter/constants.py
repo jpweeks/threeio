@@ -127,6 +127,10 @@ WRAPPING = type('Wrapping', (), {
     'CLAMP': 'ClampToEdgeWrapping',
     'MIRROR': 'MirroredRepeatWrapping'
 })
+ANISOTROPY = 'anisotropy'
+MAG_FILTER = 'magFilter'
+MIN_FILTER = 'minFilter'
+MAPPING = 'mapping'
 
 IMAGE = 'image'
 

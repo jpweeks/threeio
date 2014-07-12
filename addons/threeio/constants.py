@@ -7,6 +7,25 @@ BLENDING = type('Blending', (), {
     'CUSTOM': 'CustomBlending'
 })
 
+NEAREST_FILTERS = type('NearestFilters', (), {
+    'NEAREST': 'NearestFilter',
+    'MIP_MAP_NEAREST': 'NearestMipMapNearestFilter',
+    'MIP_MAP_LINEAR': 'NearestMipMapLinearFilter'
+})
+
+LINEAR_FILTERS = type('LinearFilters', (), {
+    'LINEAR': 'LinearFilter',
+    'MIP_MAP_NEAREST': 'LinearMipMapNearestFilter',
+    'MIP_MAP_LINEAR': 'LinearMipMapLinearFilter'
+})
+
+MAPPING = type('Mapping', (), {
+    'UV': 'UVMapping',
+    'CUBE_REFLECTION': 'CubeReflectionMapping',
+    'CUBE_REFRACTION': 'CubeRefractionMapping',
+    'SPHERICAL_REFLECTION': 'SphericalReflectionMapping',
+    'SPHERICAL_REFRACTION': 'SphericalRefractionMapping'
+})
 
 EXTENSION = '.json'
 

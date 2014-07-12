@@ -23,3 +23,7 @@ MULTIPLY = 'MULTIPLY'
 
 WIRE = 'WIRE'
 IMAGE = 'IMAGE'
+
+MAG_FILTER = 'LinearFilter'
+MIN_FILTER = 'LinearMipMapLinearFilter'
+MAPPING = 'UVMapping'

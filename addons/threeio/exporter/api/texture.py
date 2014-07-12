@@ -1,7 +1,7 @@
 import bpy
 from bpy import data, types
 from .. import constants, logger
-from .constants import IMAGE
+from .constants import IMAGE, MAG_FILTER, MIN_FILTER, MAPPING
 from . import image
 
 
@@ -43,6 +43,40 @@ def file_path(texture):
 def image_node(texture):
     logger.debug('texture.image_node(%s)', texture)
     return texture.image
+
+
+@_texture
+def mag_filter(texture):
+    logger.debug('texture.mag_filter(%s)', texture)
+    try:
+        val = texture.threeio_mag_filter
+    except AttributeError:
+        logger.debug('No threeio_mag_filter attribute found')
+        val = MAG_FILTER
+
+    return val
+
+
+@_texture
+def mapping(texture):
+    logger.debug('texture.mapping(%s)', texture)
+    try:
+        val = texture.threeio_mapping
+    except AttributeError:
+        logger.debug('No threeio_mapping attribute found')
+        val = MAPPING
+
+    return val
+@_texture
+def min_filter(texture):
+    logger.debug('texture.min_filter(%s)', texture)
+    try:
+        val = texture.threeio_min_filter
+    except AttributeError:
+        logger.debug('No threeio_min_filter attribute found')
+        val = MIN_FILTER 
+
+    return val
 
 
 @_texture
