@@ -64,6 +64,10 @@ WARNING = 'warning'
 INFO = 'info'
 DEBUG = 'debug'
 
+NONE = 'None'
+MSGPACK = 'msgpack'
+
+PACK = 'pack'
 
 EXPORT_OPTIONS = {
     FACES: True,

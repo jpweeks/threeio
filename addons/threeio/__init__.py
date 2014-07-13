@@ -18,7 +18,7 @@ SETTINGS_FILE_EXPORT = 'threeio_settings_export.js'
 bl_info = {
     'name': 'ThreeIO',
     'author': 'Ed Caspersen',
-    'version': (0, 2, 1),
+    'version': (0, 3, 0),
     'blender': (2, 7, 1),
     'location': 'File > Import-Export',
     'description': 'Export ThreeJs scenes',
@@ -164,6 +164,7 @@ def save_settings_export(properties):
         constants.ROUND_OFF: properties.option_round_off,
         constants.ROUND_VALUE: properties.option_round_value,
         constants.LOGGING: properties.option_logging,
+        constants.COMPRESSION: properties.option_compression,
         constants.COPY_TEXTURES: properties.option_copy_textures,
 
         constants.SCENE: properties.option_export_scene,
@@ -230,6 +231,8 @@ def restore_settings_export(properties):
         constants.ROUND_VALUE, constants.EXPORT_OPTIONS[constants.ROUND_VALUE])
     properties.option_logging = settings.get(
         constants.LOGGING, constants.EXPORT_OPTIONS[constants.LOGGING])
+    properties.option_compression = settings.get(
+        constants.COMPRESSION, constants.NONE)
     properties.option_copy_textures = settings.get(
         constants.COPY_TEXTURES, constants.EXPORT_OPTIONS[constants.COPY_TEXTURES])
     ## }
@@ -354,7 +357,6 @@ class ExportThreeIO(bpy.types.Operator, ExportHelper):
         items=logging_types, 
         default=constants.DEBUG)
 
-
     option_export_scene = BoolProperty(
         name='Scene', 
         description='Export scene', 
@@ -399,6 +401,16 @@ class ExportThreeIO(bpy.types.Operator, ExportHelper):
         soft_max=1000, 
         default=1)
 
+    compression_types = [
+        (constants.NONE, constants.NONE, constants.NONE),
+        (constants.MSGPACK, constants.MSGPACK, constants.MSGPACK)]
+
+    option_compression = EnumProperty(
+        name='Compression', 
+        description = 'Compression options', 
+        items=compression_types, 
+        default=constants.NONE)
+
     def invoke(self, context, event):
         restore_settings_export(self.properties)
         return ExportHelper.invoke(self, context, event)
@@ -413,11 +425,15 @@ class ExportThreeIO(bpy.types.Operator, ExportHelper):
 
         settings = save_settings_export(self.properties)
 
+        filepath = self.filepath
+        if settings[constants.COMPRESSION] == constants.MSGPACK:
+            filepath = '%s%s' % (filepath[:-4], constants.PACK)
+
         from threeio import exporter
         if settings[constants.SCALE]:
-            exporter.export_scene(self.filepath, settings)
+            exporter.export_scene(filepath, settings)
         else:
-            exporter.export_geometry(self.filepath, settings)
+            exporter.export_geometry(filepath, settings)
 
         return {'FINISHED'}
 
@@ -477,6 +493,9 @@ class ExportThreeIO(bpy.types.Operator, ExportHelper):
 
         row = layout.row()
         row.prop(self.properties, 'option_logging')
+
+        row = layout.row()
+        row.prop(self.properties, 'option_compression')
 
         row = layout.row()
         row.prop(self.properties, 'option_copy_textures')

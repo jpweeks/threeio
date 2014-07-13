@@ -38,6 +38,8 @@ from ..constants import  (
     WARNING,
     INFO,
     DEBUG,
+    MSGPACK,
+    NONE,
     EXPORT_OPTIONS as OPTIONS
 )
 
@@ -54,7 +56,6 @@ ROUND_VALUE = 'roundValue'
 ROUND_OFF = 'roundOff'
 
 JSON = 'json'
-MSGPACK = 'msgpack'
 GZIP = 'gzip'
 
 EXTENSIONS = {

@@ -17,11 +17,17 @@ def dump(filepath, data, options=None):
     options = options or {}
     logger.debug('io.dump(%s, data, options=%s)', filepath, options)
 
-    compress = options.get(constants.COMPRESSION)
-    if compress:
-        message = 'Compression not yet implemented'
-        logger.error(message)
-        raise exceptions.UnimplementedFeatureError(message)
+    compress = options.get(constants.COMPRESSION, constants.NONE)
+    if compress == constants.MSGPACK:
+        try:
+            import msgpack
+        except ImportError:
+            logger.error('msgpack module not found')
+            raise
+
+        logger.info('Dumping to msgpack')
+        func = lambda x,y: msgpack.dump(x, y)
+        mode = 'wb'
     else:
         round_off = options.get(constants.ROUND_OFF)
         if round_off:
@@ -37,15 +43,16 @@ def dump(filepath, data, options=None):
     with open(filepath, mode=mode) as stream:
         func(data, stream)
 
-    print('LOG: %s', logger.LOG_FILE) 
-
 
 def load(filepath, options):
     logger.debug('io.load(%s, %s)', filepath, options)
-    if options.get(constant.MSGPack):
-        message = 'MSGPack loading not yet supported'
-        logger.error(message)
-        raise exceptions.UnimplementedFeatureError(message)
+    compress = options.get(constants.COMPRESSION, constants.NONE)
+    if compress == constants.MSGPACK:
+        try:
+            import msgpack
+        except ImportError:
+            logger.error('msgpack module not found')
+            raise
         module = msgpack
         mode = 'rb'
     else:

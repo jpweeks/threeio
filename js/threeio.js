@@ -1,34 +1,31 @@
 ThreeIO = {}
 
-ThreeIO.jsonParser = function ( url ) {
+ThreeIO.jsonParser = function ( url, onLoad ) {
 
-    return new Promise( function ( resolve, reject ) {
-	    var xhr = new XMLHttpRequest();
-        xhr.open( 'GET', url );
-        
-        xhr.onload = function() {
-
-            if ( xhr.status == 200 ) {
-                
-                resolve( xhr.responseText );
-
-            } else {
-
-                reject( Error( xhr.statusText ) );
-
-            }
-
-        };
-
-        xhr.onerror = function ( ) {
-
-            reject( Error( 'Network Error' ) );
-
-        };
+    var xhr = new XMLHttpRequest();
+    xhr.open( 'GET', url );
     
-        xhr.send( null );
+    xhr.onload = function() {
 
-    } );
+        if ( xhr.status == 200 ) {
+            
+            onLoad( JSON.parse( xhr.responseText ) );
+
+        } else {
+
+            Error( xhr.statusText );
+
+        }
+
+    };
+
+    xhr.onerror = function ( ) {
+
+        Error( 'Network Error' ) ;
+
+    };
+
+    xhr.send( null );
 
 }
 
@@ -68,14 +65,9 @@ ThreeIO.Loader = function ( ) {
 
     this._urlHandlers[ 'geometry' ] =  function ( data, onLoad ) {
         
-        ThreeIO.jsonParser( data.url ).then ( function ( response ) {
+        ThreeIO.jsonParser( data.url, function ( response ) {
 
-            onLoad( JSON.parse( response ), data.uuid );
-
-
-        }, function ( error ) {
-        
-            console.error( 'failed to load ' + url );
+            onLoad( response, data.uuid );
 
         } );
     };
