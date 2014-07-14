@@ -71,6 +71,8 @@ def cast_shadow(obj):
         mat = material(obj)
         if mat:
             return data.materials[mat].use_cast_shadows
+        else:
+            return False
 
 
 @_object
@@ -102,9 +104,14 @@ def mesh(obj, options):
     else:
         logger.debug('Could not map object, updating manifest')
         mesh = extract_mesh(obj, options)
-        manifest = _MESH_MAP.setdefault(mesh.name, [])
-        manifest.append(obj)
-        mesh = mesh.name
+        if len(mesh.tessfaces) is not 0:
+            manifest = _MESH_MAP.setdefault(mesh.name, [])
+            manifest.append(obj)
+            mesh = mesh.name
+        else:
+            # possibly just being used as a controller
+            logger.info('Object %s has no faces', obj.name)
+            mesh = None
 
     return mesh
 
@@ -143,12 +150,30 @@ def node_type(obj):
         raise exceptions.UnsupportedObjectType(msg)
  
 
-def nodes(valid_types):
+def nodes(valid_types, options):
+    visible_layers = _visible_scene_layers()
     for obj in data.objects:
+        if not _on_visible_layer(obj, visible_layers): 
+            continue
         try:
             export = obj.threeio_export
         except AttributeError:
             export = True
+
+        mesh_node = mesh(obj, options)
+        is_mesh = obj.type == MESH
+
+        # skip objects that a mesh could not be resolved
+        if is_mesh and not mesh_node:
+            continue
+
+        # secondary test; if a mesh node was resolved but no
+        # faces are detected then bow out
+        if is_mesh:
+            mesh_node = data.meshes[mesh_node]
+            if len(mesh_node.tessfaces) is 0:
+                continue
+
         if obj.type in valid_types and export:
             yield obj.name
 
@@ -172,6 +197,8 @@ def receive_shadow(obj):
         mat = material(obj)
         if mat:
             return data.materials[mat].use_shadows
+        else:
+            return False
 
 
 @_object
@@ -262,8 +289,19 @@ def objects_using_mesh(mesh):
 def prep_meshes(options):
     logger.debug('object.prep_meshes(%s)', options)
     mapping = {}
+
+    visible_layers = _visible_scene_layers()
+        
     for obj in data.objects:
-        if obj.type != MESH: continue
+        if obj.type != MESH: 
+            continue
+
+        if not _on_visible_layer(obj, visible_layers): 
+            continue
+
+        if not obj.threeio_export: 
+            logger.info('%s export is disabled', obj.name)
+            continue
 
         if len(obj.modifiers):
             logger.info('%s has modifiers' % obj.name)
@@ -287,3 +325,21 @@ def extracted_meshes():
 def _matrix(obj):
     matrix = ROTATE_X_PI2 * obj.matrix_world
     return matrix.decompose()
+
+
+def _on_visible_layer(obj, visible_layers):
+    obj_layers = []
+    visible = True
+    for index, layer in enumerate(obj.layers):
+        if layer and index not in visible_layers:
+            logger.info('%s is on a hidden layer', obj.name)
+            visible = False
+            break
+    return visible
+
+
+def _visible_scene_layers():
+    visible_layers = []
+    for index, layer in enumerate(context.scene.layers):
+        if layer: visible_layers.append(index)
+    return visible_layers
