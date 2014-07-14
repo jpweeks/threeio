@@ -152,7 +152,7 @@ class Scene(base_classes.BaseScene):
         self[constants.OBJECT][constants.TYPE] = constants.SCENE.title()
 
         objects = [] 
-        for node in api.object.nodes(self.valid_types):
+        for node in api.object.nodes(self.valid_types, self.options):
             logger.info('Parsing object %s', node)
             obj = object.Object(node, parent=self[constants.OBJECT])
             objects.append(obj)

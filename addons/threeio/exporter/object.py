@@ -74,11 +74,12 @@ class Object(base_classes.BaseNode):
                 material_inst = self.scene.material(material_name)
                 self[constants.MATERIAL] = material_inst[constants.UUID]
             else:
-                logger.info('%s had not materials', self.node)
+                logger.info('%s has no materials', self.node)
 
         casts_shadow = (constants.MESH, 
             constants.DIRECTIONAL_LIGHT,
             constants.SPOT_LIGHT)
+
         if self[constants.TYPE] in casts_shadow:
             logger.info('Querying shadow casting for %s', self.node)
             self[constants.CAST_SHADOW] = \
