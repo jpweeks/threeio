@@ -6,7 +6,7 @@
     <meta name='review' content='width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0'>
     <script src='../../tests/review/scripts/three.js'></script>
     <script src='../../tests/review/scripts/OrbitControls.js'></script>
-    <script src='../../js/threeio.js'></script>
+    <script src='../../js/threeio.min.js'></script>
   </head>
   <style>
     body {
@@ -45,7 +45,7 @@
           orbit.target = target;
           camera.updateProjectionMatrix();
 
-          ThreeIO.jsonParser( 'scene_suzanne.json', function ( data ) {
+          ThreeIO.loadJSON( 'scene_suzanne.json', function ( data ) {
 
               var loader = new ThreeIO.Loader();
               loader.parse( data, function ( parsed ) {
