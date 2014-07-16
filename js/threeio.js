@@ -1,6 +1,31 @@
 ThreeIO = {}
 
-ThreeIO.jsonParser = function ( url, onLoad ) {
+/*
+ * This function requires that your web app sources require.js and has
+ * setup the baseUrl correctly (if loading from a partial path)
+ */
+ThreeIO.loadMSGPack = function( url, onLoad ) {
+
+    require(['msgpack-js'], function( msgpack ) {
+          
+        var xhr = new XMLHttpRequest();
+        xhr.open('GET', url );
+        xhr.responseType = 'arraybuffer';
+
+        xhr.onload = function( e ) {
+
+            var decoded = msgpack.decode( this.response );
+            onLoad( decoded );
+
+        };
+
+        xhr.send();
+
+    } );
+
+};
+
+ThreeIO.loadJSON = function ( url, onLoad ) {
 
     var xhr = new XMLHttpRequest();
     xhr.open( 'GET', url );
