@@ -18,7 +18,7 @@ SETTINGS_FILE_EXPORT = 'threeio_settings_export.js'
 bl_info = {
     'name': 'ThreeIO',
     'author': 'Ed Caspersen',
-    'version': (0, 3, 1),
+    'version': (0, 3, 2),
     'blender': (2, 7, 1),
     'location': 'File > Import-Export',
     'description': 'Export ThreeJs scenes',
@@ -53,21 +53,22 @@ class MATERIAL_PT_hello(bpy.types.Panel):
     def draw(self, context):
         layout = self.layout
         mat = context.material
+    
+        if mat is not None:
+            row = layout.row()
+            row.label(text='Selected material: %s' % mat.name )
 
-        row = layout.row()
-        row.label(text='Selected material: %s' % mat.name )
+            row = layout.row()
+            row.prop(mat, 'threeio_blending_type', 
+                text='Blending type' )
 
-        row = layout.row()
-        row.prop(mat, 'threeio_blending_type', 
-            text='Blending type' )
+            row = layout.row()
+            row.prop(mat, 'threeio_depth_write', 
+                text='Enable depth writing' )
 
-        row = layout.row()
-        row.prop(mat, 'threeio_depth_write', 
-            text='Enable depth writing' )
-
-        row = layout.row()
-        row.prop(mat, 'threeio_depth_test', 
-            text='Enable depth testing' )
+            row = layout.row()
+            row.prop(mat, 'threeio_depth_test', 
+                text='Enable depth testing' )
 
 def _mag_filters(index):
     types = (constants.LINEAR_FILTERS.LINEAR,
