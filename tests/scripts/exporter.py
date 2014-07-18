@@ -1,12 +1,6 @@
 import os
 import argparse
-
-os.chdir(os.path.dirname(os.path.realpath(__file__)))
-os.chdir('../../')
-addons = os.path.join(os.getcwd(), 'addons')
-
 import sys
-sys.path.append(addons)
 import threeio
 from threeio.exporter import constants
 

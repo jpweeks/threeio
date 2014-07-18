@@ -8,6 +8,11 @@ fi
 
 export TMP_JSON=`python -c "import tempfile;print(tempfile.mktemp(prefix='$TAG.', suffix='.json'))"`
 
+_dir=`dirname $DIR`
+_dir=`dirname $_dir`
+export BLENDER_USER_SCRIPTS="$_dir/BLENDER_USER_SCRIPTS"
+unset _dir
+
 # set the root for blend files
 export BLEND=$(cd ../blend; pwd)
 
