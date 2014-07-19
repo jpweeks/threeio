@@ -261,6 +261,17 @@ def restore_settings_export(properties):
         constants.FRAME_STEP, constants.EXPORT_OPTIONS[constants.FRAME_STEP])
     ## }
 
+def compression_types():
+    types = [(constants.NONE, constants.NONE, constants.NONE)]
+
+    try:
+        import msgpack
+        types.append((constants.MSGPACK, constants.MSGPACK, 
+            constants.MSGPACK))
+    except ImportError:
+        pass
+
+    return types
 
 class ExportThreeIO(bpy.types.Operator, ExportHelper):
 
@@ -401,15 +412,11 @@ class ExportThreeIO(bpy.types.Operator, ExportHelper):
         soft_min=1, 
         soft_max=1000, 
         default=1)
-
-    compression_types = [
-        (constants.NONE, constants.NONE, constants.NONE),
-        (constants.MSGPACK, constants.MSGPACK, constants.MSGPACK)]
-
+ 
     option_compression = EnumProperty(
         name='Compression', 
         description = 'Compression options', 
-        items=compression_types, 
+        items=compression_types(), 
         default=constants.NONE)
 
     def invoke(self, context, event):
