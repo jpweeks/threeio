@@ -1,4 +1,4 @@
-ThreeIO = {}
+ThreeIO = {};
 
 /*
  * This function requires that your web app sources require.js and has
@@ -52,7 +52,7 @@ ThreeIO.loadJSON = function ( url, onLoad ) {
 
     xhr.send( null );
 
-}
+};
 
 ThreeIO.loadTexture = function ( url, callback ) {
 
@@ -61,34 +61,36 @@ ThreeIO.loadTexture = function ( url, callback ) {
     var texture;
     
     if ( url instanceof Array ) {
-
-        var dispatch = {
-            true: THREE.ImageUtils.loadCompressedTextureCube,
-            false: THRE.ImageUtils.loadTextureCube
-        }
-        texture = dispatch[ compressed.test( url[ 0 ] ) ]( url );
+    
+        var index = ( compressed.test( url[ 0 ] ) ) ? 0 : 1;
+        var dispatch = [
+            THREE.ImageUtils.loadCompressedTextureCube,
+            THREE.ImageUtils.loadTextureCube
+        ];
+        texture = dispatch[ index  ]( url );
 
     } else {
 
-        var dispatch = {
-            true: THREE.ImageUtils.loadCompressedTexture,
-            false: THREE.ImageUtils.loadTexture
-        }
-        texture = dispatch[ compressed.test( url ) ]( url, mapping );
+        var index = ( compressed.test( url ) ) ? 0 : 1;
+        var dispatch = [
+            THREE.ImageUtils.loadCompressedTexture,
+            THREE.ImageUtils.loadTexture
+        ];
+        texture = dispatch[ index ]( url, mapping );
 
     }
 
-    callback( texture );
 
-}
+    callback( texture );
+};
 
 ThreeIO.Loader = function ( ) {
 
-    this._urlHandlers = {};
+    this.urlHandlers = {};
 
     var scope = this;
 
-    this._urlHandlers[ 'geometry' ] =  function ( data, onLoad ) {
+    this.urlHandlers[ 'geometry' ] =  function ( data, onLoad ) {
         
         ThreeIO.jsonParser( data.url, function ( response ) {
 
@@ -97,7 +99,7 @@ ThreeIO.Loader = function ( ) {
         } );
     };
 
-    this._urlHandlers[ 'image' ] = function ( data, callback ) {
+    this.urlHandlers[ 'image' ] = function ( data, callback ) {
 
         ThreeIO.loadTexture( data.url, function ( texture ) {
         
@@ -363,7 +365,7 @@ ThreeIO.Loader.prototype.parseGeometries = function ( geometries, onLoad ) {
         
             var uuid = data.uuid;
 
-            this._urlHandlers.geometry( data, function ( geom, uuid ) {
+            this.urlHandlers.geometry( data, function ( geom, uuid ) {
 
                 var geometry = loader.parse( geom ).geometry;
 
@@ -436,7 +438,7 @@ ThreeIO.Loader.prototype.parseMaterials = function ( materials, textures ) {
 
 ThreeIO.Loader.prototype.parseTextures = function ( json, callback ) {
 
-    var urlHandler = this._urlHandlers.image;
+    var urlHandler = this.urlHandlers.image;
     var values = [ 'anisotropy', 'name', 'flipY'];
     var vector2 = [ 'repeat', 'offset' ];
     var keys = [ 'mapping', 'magFilter', 'minFilter' ];
