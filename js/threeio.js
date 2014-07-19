@@ -92,7 +92,7 @@ ThreeIO.Loader = function ( ) {
 
     this.urlHandlers[ 'geometry' ] =  function ( data, onLoad ) {
         
-        ThreeIO.jsonParser( data.url, function ( response ) {
+        ThreeIO.loadJSON( data.url, function ( response ) {
 
             onLoad( response, data.uuid );
 
