@@ -345,41 +345,88 @@ ThreeIO.Loader.prototype.parseObject = function () {
 
 ThreeIO.Loader.prototype.parseGeometries = function ( geometries, onLoad ) {
 
-    var loader = new THREE.JSONLoader();
+    var jsonLoader = new THREE.JSONLoader();
+    var bufferLoader = new THREE.BufferGeometryLoader();
+
+    var parseJSON = function ( data, callback ) {
+
+        var geometry = jsonLoader.parse( data.data ).geometry;
+
+        if ( data.uuid !== undefined ) geometry.uuid = data.uuid;
+        if ( data.data.name !== undefined ) geometry.name = data.data.name;
+
+        callback( geometry );
+
+    };
+
+    var parseBuffer = function ( data, callback ) {
+
+        var geometry = bufferLoader.parse( data );
+
+        if ( data.uuid !== undefined ) geometry.uuid = data.uuid;
+        if ( data.name !== undefined ) geometry.name = data.name;
+
+        callback( geometry );
+
+    };
 
     for ( i = 0; i < geometries.length; i ++ ) {
 
         var data = geometries[ i ];
 
-        if ( data.data !== undefined ) {
+        if ( data.type == 'Geometry' ) {
 
-            var geometry = loader.parse( data.data ).geometry;
+            if ( data.url === undefined ) {
 
-            geometry.uuid = data.uuid;
+                parseJSON( data, function ( geometry ) { 
+                
+                    onLoad( geometry );
 
-            if ( data.name !== undefined ) geometry.name = data.name;
+                } );
 
-            onLoad( geometry );
+            } else {
 
-        } else if ( data.url !== undefined ) {
+                this.urlHandlers.geometry( data, function ( geom, uuid ) {
+
+                    var args = { data : geom, uuid: uuid };
+                    parseJSON( args, function ( geometry ) {
+
+                        onLoad( geometry );
+
+                    } );
+
+                } );
+
+            }
+
+        } else if ( data.type == 'BufferGeometry' ) {
         
-            var uuid = data.uuid;
+            if ( data.url === undefined ) {
 
-            this.urlHandlers.geometry( data, function ( geom, uuid ) {
+                parseBuffer( data, function ( geometry ) { 
+                
+                    onLoad( geometry );
 
-                var geometry = loader.parse( geom ).geometry;
+                } );
 
-                geometry.uuid = uuid;
+            } else {
 
-                if ( geom.name !== undefined ) geometry.name = geom.name;
-    
-                onLoad( geometry );
+                this.urlHandlers.geometry( data, function ( geom, uuid ) {
 
-            } );
+                    if ( geom.uuid === undefined ) geom.uuid = uuid;
+                    parseBuffer( geom, function ( geometry ) {
+
+                        onLoad( geometry );
+
+                    } );
+
+                } );
+
+            }
 
         } else {
 
-            console.error('unrecognized geometry definitions');
+            console.error('unrecognized geometry type');
 
         }
 
