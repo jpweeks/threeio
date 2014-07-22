@@ -18,7 +18,7 @@ SETTINGS_FILE_EXPORT = 'threeio_settings_export.js'
 bl_info = {
     'name': 'ThreeIO',
     'author': 'Ed Caspersen',
-    'version': (0, 3, 3),
+    'version': (0, 3, 4),
     'blender': (2, 7, 1),
     'location': 'File > Import-Export',
     'description': 'Export ThreeJs scenes',
@@ -448,7 +448,7 @@ class ExportThreeIO(bpy.types.Operator, ExportHelper):
             filepath = '%s%s' % (filepath[:-4], constants.PACK)
 
         from threeio import exporter
-        if settings[constants.SCALE]:
+        if settings[constants.SCENE]:
             exporter.export_scene(filepath, settings)
         else:
             exporter.export_geometry(filepath, settings)
@@ -464,9 +464,7 @@ class ExportThreeIO(bpy.types.Operator, ExportHelper):
 
         row = layout.row()
         row.prop(self.properties, 'option_vertices')
-        row.enabled = self.properties.option_vertices
         row.prop(self.properties, 'option_faces')
-        row.enabled = self.properties.option_faces
 
         row = layout.row()
         row.prop(self.properties, 'option_normals')
