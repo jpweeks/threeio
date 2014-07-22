@@ -6,5 +6,5 @@ cd $DIR
 source setup_test_env.bash
 blender --background $BLEND/scene_instancing.blend --python $PYSCRIPT -- \
     $TMP_JSON --vertices --faces --scene --materials --roundOff \
-    --roundValue 4 --embed
+    --roundValue 4 --embedGeometry
 testjson $@ --tag $(tagname)

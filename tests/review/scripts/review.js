@@ -82,10 +82,9 @@ function loadData( data, url ) {
             console.log( 'loading animation' );
             data.materials[ 0 ].skinning = true;
             mesh = new THREE.SkinnedMesh( data.geometry, material, false);
-            THREE.AnimationHandler.add( data.geometry.animation );
 
             var name = data.geometry.animation.name;
-            animation = new THREE.Animation( mesh, name );
+            animation = new THREE.Animation( mesh, data.geometry.animation );
 
 
         } else {

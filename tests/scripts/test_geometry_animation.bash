@@ -5,5 +5,6 @@ cd $DIR
 
 source setup_test_env.bash
 blender --background $BLEND/anim.blend --python $PYSCRIPT -- \
-    $TMP_JSON --vertices --faces --animation --bones --skinning
+    $TMP_JSON --vertices --faces --animation --bones --skinning \
+    --embedAnimation
 testjson $@ --tag $(tagname)
