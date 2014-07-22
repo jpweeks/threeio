@@ -3,7 +3,7 @@ threeio
 
 Blender exporter for Three.js (importer not yet ready).
 
-Three.js compatible version: r67
+Three.js compatible version: r68
 
 * Geometry format: 3.x
 * Scene format (limited): 4.x
