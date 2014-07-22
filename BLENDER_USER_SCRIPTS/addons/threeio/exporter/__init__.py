@@ -1,3 +1,4 @@
+import os
 import sys
 import traceback
 from . import (
@@ -56,3 +57,6 @@ def export_geometry(filepath, options, node=None):
     geo = geometry.Geometry(mesh, parent)
     geo.parse()
     geo.write()
+    
+    if not options.get(constants.EMBED_ANIMATION, True):
+        geo.write_animation(os.path.dirname(filepath))

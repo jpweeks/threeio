@@ -32,7 +32,8 @@ from ..constants import  (
     ROUND_OFF,
     ROUND_VALUE,
     ROUND,
-    EMBED,
+    EMBED_GEOMETRY,
+    EMBED_ANIMATION,
     CRITICAL,
     ERROR,
     WARNING,
@@ -40,6 +41,8 @@ from ..constants import  (
     DEBUG,
     MSGPACK,
     NONE,
+    PACK,
+    JSON,
     EXPORT_OPTIONS as OPTIONS
 )
 

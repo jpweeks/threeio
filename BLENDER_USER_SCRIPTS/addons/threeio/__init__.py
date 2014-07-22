@@ -18,7 +18,7 @@ SETTINGS_FILE_EXPORT = 'threeio_settings_export.js'
 bl_info = {
     'name': 'ThreeIO',
     'author': 'Ed Caspersen',
-    'version': (0, 3, 2),
+    'version': (0, 3, 3),
     'blender': (2, 7, 1),
     'location': 'File > Import-Export',
     'description': 'Export ThreeJs scenes',
@@ -169,7 +169,8 @@ def save_settings_export(properties):
         constants.COPY_TEXTURES: properties.option_copy_textures,
 
         constants.SCENE: properties.option_export_scene,
-        constants.EMBED: properties.option_embed_meshes,
+        constants.EMBED_GEOMETRY: properties.option_embed_geometry,
+        constants.EMBED_ANIMATION: properties.option_embed_animation,
         constants.LIGHTS: properties.option_lights,
         constants.CAMERAS: properties.option_cameras,
 
@@ -241,8 +242,12 @@ def restore_settings_export(properties):
     ## Scene {
     properties.option_export_scene = settings.get(
         constants.SCENE, constants.EXPORT_OPTIONS[constants.SCENE])
-    properties.option_embed_meshes = settings.get(
-        constants.EMBED, constants.EXPORT_OPTIONS[constants.EMBED])
+    properties.option_embed_geometry = settings.get(
+        constants.EMBED_GEOMETRY, 
+        constants.EXPORT_OPTIONS[constants.EMBED_GEOMETRY])
+    properties.option_embed_animation = settings.get(
+        constants.EMBED_ANIMATION, 
+        constants.EXPORT_OPTIONS[constants.EMBED_ANIMATION])
     properties.option_lights = settings.get(
         constants.LIGHTS, constants.EXPORT_OPTIONS[constants.LIGHTS])
     properties.option_cameras = settings.get(
@@ -374,10 +379,15 @@ class ExportThreeIO(bpy.types.Operator, ExportHelper):
         description='Export scene', 
         default=constants.EXPORT_OPTIONS[constants.SCENE])
 
-    option_embed_meshes = BoolProperty(
-        name='Embed meshes', 
-        description='Embed meshes', 
-        default=constants.EXPORT_OPTIONS[constants.EMBED])
+    option_embed_geometry = BoolProperty(
+        name='Embed geometry', 
+        description='Embed geometry', 
+        default=constants.EXPORT_OPTIONS[constants.EMBED_GEOMETRY])
+
+    option_embed_animation = BoolProperty(
+        name='Embed animation', 
+        description='Embed animation data with the geometry data', 
+        default=constants.EXPORT_OPTIONS[constants.EMBED_ANIMATION])
 
     option_copy_textures = BoolProperty(
         name='Copy textures', 
@@ -460,7 +470,6 @@ class ExportThreeIO(bpy.types.Operator, ExportHelper):
 
         row = layout.row()
         row.prop(self.properties, 'option_normals')
-        row.enabled = self.properties.option_normals
 
         row = layout.row()
         row.prop(self.properties, 'option_bones')
@@ -517,7 +526,12 @@ class ExportThreeIO(bpy.types.Operator, ExportHelper):
 
         row = layout.row()
         row.prop(self.properties, 'option_export_scene')
-        row.prop(self.properties, 'option_embed_meshes')
+
+        row = layout.row()
+        row.prop(self.properties, 'option_embed_geometry')
+
+        row = layout.row()
+        row.prop(self.properties, 'option_embed_animation')
 
         row = layout.row()
         row.prop(self.properties, 'option_lights')

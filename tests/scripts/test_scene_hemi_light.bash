@@ -6,5 +6,5 @@ cd $DIR
 source setup_test_env.bash
 blender --background $BLEND/scene_hemi_light.blend \
     --python $PYSCRIPT -- $TMP_JSON --vertices --faces --scene \
-    --lights --materials --embed
+    --lights --materials --embedGeometry
 testjson $@ --tag $(tagname)
