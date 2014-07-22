@@ -16,6 +16,26 @@ class Geometry(base_classes.BaseNode):
             type=constants.GEOMETRY.title())
 
     @property
+    def animation_filename(self):
+        compression = self.options.get(constants.COMPRESSION)
+        if compression in (None, constants.NONE):
+            ext = constants.JSON
+        elif compression == constants.MSGPACK:
+            ext = constants.PACK
+
+        for key in (constants.MORPH_TARGETS, constants.ANIMATION):
+            try:
+                self[key]
+                break
+            except KeyError:
+                pass
+        else:
+            logger.info('%s has no animation data', self.node)
+            return
+
+        return '%s.%s.%s' % (self.node, key, ext)
+
+    @property
     def face_count(self):
         try:
             faces = self[constants.FACES]
@@ -174,14 +194,50 @@ class Geometry(base_classes.BaseNode):
             logger.info('Copying textures for %s', self.node)
             self.copy_textures()
 
+    def write_animation(self, filepath):
+        logger.debug('Geometry().write_animation(%s)', filepath)
+
+        for key in (constants.MORPH_TARGETS, constants.ANIMATION):
+            try:
+                data = self[key]
+                break
+            except KeyError:
+                pass
+        else:
+            logger.info('%s has no animation data', self.node)
+            return
+
+        filepath = os.path.join(filepath, self.animation_filename)
+        if filepath:
+            logger.info('Dumping animation data to %s', filepath)
+            io.dump(filepath, data, options=self.scene.options)
+            return filepath
+        else:
+            logger.warning('Could not determine a filepath for '\
+                'animation data. Nothing written to disk.')
+
     def _component_data(self):
         logger.debug('Geometry()._component_data()')
-        components = (constants.VERTICES, constants.FACES, 
+        components = [constants.VERTICES, constants.FACES, 
             constants.UVS, constants.COLORS, constants.NORMALS,
-            constants.ANIMATION, constants.BONES, constants.MORPH_TARGETS,
-            constants.SKIN_WEIGHTS, constants.SKIN_INDICES,
-            constants.NAME)
+            constants.BONES, constants.SKIN_WEIGHTS, 
+            constants.SKIN_INDICES, constants.NAME]
+
         data = {}
+        anim_components = [constants.MORPH_TARGETS, constants.ANIMATION]
+        if self.options.get(constants.EMBED_ANIMATION):
+            components.extend(anim_components)
+        else:
+            for component in anim_components:
+                try:
+                    self[component]
+                except KeyError:
+                    pass
+                else:
+                    data[component] = os.path.basename(
+                        self.animation_filename) 
+            else:
+                logger.info('No animation data found for %s', self.node)
 
         for component in components:
             try:

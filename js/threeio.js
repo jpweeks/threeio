@@ -1,6 +1,31 @@
-ThreeIO = {}
+ThreeIO = {};
 
-ThreeIO.jsonParser = function ( url, onLoad ) {
+/*
+ * This function requires that your web app sources require.js and has
+ * setup the baseUrl correctly (if loading from a partial path)
+ */
+ThreeIO.loadMSGPack = function( url, onLoad ) {
+
+    require(['msgpack-js'], function( msgpack ) {
+          
+        var xhr = new XMLHttpRequest();
+        xhr.open('GET', url );
+        xhr.responseType = 'arraybuffer';
+
+        xhr.onload = function( e ) {
+
+            var decoded = msgpack.decode( this.response );
+            onLoad( decoded );
+
+        };
+
+        xhr.send();
+
+    } );
+
+};
+
+ThreeIO.loadJSON = function ( url, onLoad ) {
 
     var xhr = new XMLHttpRequest();
     xhr.open( 'GET', url );
@@ -27,7 +52,7 @@ ThreeIO.jsonParser = function ( url, onLoad ) {
 
     xhr.send( null );
 
-}
+};
 
 ThreeIO.loadTexture = function ( url, callback ) {
 
@@ -36,43 +61,45 @@ ThreeIO.loadTexture = function ( url, callback ) {
     var texture;
     
     if ( url instanceof Array ) {
-
-        var dispatch = {
-            true: THREE.ImageUtils.loadCompressedTextureCube,
-            false: THRE.ImageUtils.loadTextureCube
-        }
-        texture = dispatch[ compressed.test( url[ 0 ] ) ]( url );
+    
+        var index = ( compressed.test( url[ 0 ] ) ) ? 0 : 1;
+        var dispatch = [
+            THREE.ImageUtils.loadCompressedTextureCube,
+            THREE.ImageUtils.loadTextureCube
+        ];
+        texture = dispatch[ index  ]( url );
 
     } else {
 
-        var dispatch = {
-            true: THREE.ImageUtils.loadCompressedTexture,
-            false: THREE.ImageUtils.loadTexture
-        }
-        texture = dispatch[ compressed.test( url ) ]( url, mapping );
+        var index = ( compressed.test( url ) ) ? 0 : 1;
+        var dispatch = [
+            THREE.ImageUtils.loadCompressedTexture,
+            THREE.ImageUtils.loadTexture
+        ];
+        texture = dispatch[ index ]( url, mapping );
 
     }
 
-    callback( texture );
 
-}
+    callback( texture );
+};
 
 ThreeIO.Loader = function ( ) {
 
-    this._urlHandlers = {};
+    this.urlHandlers = {};
 
     var scope = this;
 
-    this._urlHandlers[ 'geometry' ] =  function ( data, onLoad ) {
+    this.urlHandlers[ 'geometry' ] =  function ( data, onLoad ) {
         
-        ThreeIO.jsonParser( data.url, function ( response ) {
+        ThreeIO.loadJSON( data.url, function ( response ) {
 
             onLoad( response, data.uuid );
 
         } );
     };
 
-    this._urlHandlers[ 'image' ] = function ( data, callback ) {
+    this.urlHandlers[ 'image' ] = function ( data, callback ) {
 
         ThreeIO.loadTexture( data.url, function ( texture ) {
         
@@ -318,41 +345,88 @@ ThreeIO.Loader.prototype.parseObject = function () {
 
 ThreeIO.Loader.prototype.parseGeometries = function ( geometries, onLoad ) {
 
-    var loader = new THREE.JSONLoader();
+    var jsonLoader = new THREE.JSONLoader();
+    var bufferLoader = new THREE.BufferGeometryLoader();
+
+    var parseJSON = function ( data, callback ) {
+
+        var geometry = jsonLoader.parse( data.data ).geometry;
+
+        if ( data.uuid !== undefined ) geometry.uuid = data.uuid;
+        if ( data.data.name !== undefined ) geometry.name = data.data.name;
+
+        callback( geometry );
+
+    };
+
+    var parseBuffer = function ( data, callback ) {
+
+        var geometry = bufferLoader.parse( data );
+
+        if ( data.uuid !== undefined ) geometry.uuid = data.uuid;
+        if ( data.name !== undefined ) geometry.name = data.name;
+
+        callback( geometry );
+
+    };
 
     for ( i = 0; i < geometries.length; i ++ ) {
 
         var data = geometries[ i ];
 
-        if ( data.data !== undefined ) {
+        if ( data.type == 'Geometry' ) {
 
-            var geometry = loader.parse( data.data ).geometry;
+            if ( data.url === undefined ) {
 
-            geometry.uuid = data.uuid;
+                parseJSON( data, function ( geometry ) { 
+                
+                    onLoad( geometry );
 
-            if ( data.name !== undefined ) geometry.name = data.name;
+                } );
 
-            onLoad( geometry );
+            } else {
 
-        } else if ( data.url !== undefined ) {
+                this.urlHandlers.geometry( data, function ( geom, uuid ) {
+
+                    var args = { data : geom, uuid: uuid };
+                    parseJSON( args, function ( geometry ) {
+
+                        onLoad( geometry );
+
+                    } );
+
+                } );
+
+            }
+
+        } else if ( data.type == 'BufferGeometry' ) {
         
-            var uuid = data.uuid;
+            if ( data.url === undefined ) {
 
-            this._urlHandlers.geometry( data, function ( geom, uuid ) {
+                parseBuffer( data, function ( geometry ) { 
+                
+                    onLoad( geometry );
 
-                var geometry = loader.parse( geom ).geometry;
+                } );
 
-                geometry.uuid = uuid;
+            } else {
 
-                if ( geom.name !== undefined ) geometry.name = geom.name;
-    
-                onLoad( geometry );
+                this.urlHandlers.geometry( data, function ( geom, uuid ) {
 
-            } );
+                    if ( geom.uuid === undefined ) geom.uuid = uuid;
+                    parseBuffer( geom, function ( geometry ) {
+
+                        onLoad( geometry );
+
+                    } );
+
+                } );
+
+            }
 
         } else {
 
-            console.error('unrecognized geometry definitions');
+            console.error('unrecognized geometry type');
 
         }
 
@@ -411,7 +485,7 @@ ThreeIO.Loader.prototype.parseMaterials = function ( materials, textures ) {
 
 ThreeIO.Loader.prototype.parseTextures = function ( json, callback ) {
 
-    var urlHandler = this._urlHandlers.image;
+    var urlHandler = this.urlHandlers.image;
     var values = [ 'anisotropy', 'name', 'flipY'];
     var vector2 = [ 'repeat', 'offset' ];
     var keys = [ 'mapping', 'magFilter', 'minFilter' ];

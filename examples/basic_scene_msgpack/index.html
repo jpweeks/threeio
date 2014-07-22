@@ -7,7 +7,7 @@
     <script src='../../tests/review/scripts/three.js'></script>
     <script src='../../tests/review/scripts/OrbitControls.js'></script>
     <script src='../libs/require.js'></script>
-    <script src='../../js/threeio.js'></script>
+    <script src='../../js/threeio.min.js'></script>
   </head>
   <style>
     body {
@@ -47,30 +47,18 @@
           orbit.target = target;
           camera.updateProjectionMatrix();
 
-          require(['msgpack-js'], function( msgpack ) {
-          
-              var xhr = new XMLHttpRequest();
-              xhr.open('GET', 'scene_suzanne.pack' );
-              xhr.responseType = 'arraybuffer';
+          ThreeIO.loadMSGPack( 'scene_suzanne.pack', function( data ) {
+              
+              var loader = new ThreeIO.Loader();
+              loader.parse( data, function ( parsed ) {
 
-              xhr.onload = function( e ) {
+                  scene = parsed;
+                  render();
 
-                  var decoded = msgpack.decode( this.response );
+              } );
 
-                  var loader = new ThreeIO.Loader();
-                  loader.parse( decoded, function ( parsed ) {
-
-                      scene = parsed;
-                      render();
-
-                  } );
-
-              };
-
-              xhr.send();
-          
           } );
-      
+               
       }
 
       function render() {

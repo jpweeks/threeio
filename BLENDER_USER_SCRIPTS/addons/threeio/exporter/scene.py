@@ -76,10 +76,10 @@ class Scene(base_classes.BaseScene):
         logger.debug('Scene().write()')
         data = {}
         
-        print(self.options)
+        embed_anim = self.options.get(constants.EMBED_ANIMATION, True)
         for key, value in self.items():
             if key == constants.GEOMETRIES and \
-            not self.options[constants.EMBED]:
+            not self.options[constants.EMBED_GEOMETRY]:
                 geometries = []
                 for geometry in value:
                     geom_data = geometry.copy()
@@ -96,6 +96,10 @@ class Scene(base_classes.BaseScene):
                     geom_data[constants.URL] = os.path.basename(url)
 
                     geometries.append(geom_data)
+
+                    if not embed_anim:
+                        geom_dir = os.path.dirname(geometry_file)
+                        geometry.write_animation(geom_dir)
 
                 data[key] = geometries
             elif isinstance(value, list):
@@ -152,7 +156,7 @@ class Scene(base_classes.BaseScene):
         self[constants.OBJECT][constants.TYPE] = constants.SCENE.title()
 
         objects = [] 
-        for node in api.object.nodes(self.valid_types):
+        for node in api.object.nodes(self.valid_types, self.options):
             logger.info('Parsing object %s', node)
             obj = object.Object(node, parent=self[constants.OBJECT])
             objects.append(obj)

@@ -27,7 +27,8 @@ MAPPING = type('Mapping', (), {
     'SPHERICAL_REFRACTION': 'SphericalRefractionMapping'
 })
 
-EXTENSION = '.json'
+JSON = 'json'
+EXTENSION = '.%s' % JSON
 
 
 MATERIALS = 'materials'
@@ -56,7 +57,8 @@ COPY_TEXTURES = 'copyTextures'
 ROUND_OFF = 'roundOff'
 ROUND_VALUE = 'roundValue'
 ROUND = 6
-EMBED= 'embed'
+EMBED_GEOMETRY = 'embedGeometry'
+EMBED_ANIMATION = 'embedAnimation'
 
 CRITICAL = 'critical'
 ERROR = 'error'
@@ -93,5 +95,6 @@ EXPORT_OPTIONS = {
     LOGGING: DEBUG,
     ROUND_OFF: False,
     ROUND_VALUE: ROUND,
-    EMBED: True
+    EMBED_GEOMETRY: True,
+    EMBED_ANIMATION: True
 }

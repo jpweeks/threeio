@@ -18,7 +18,7 @@ SETTINGS_FILE_EXPORT = 'threeio_settings_export.js'
 bl_info = {
     'name': 'ThreeIO',
     'author': 'Ed Caspersen',
-    'version': (0, 3, 0),
+    'version': (0, 3, 4),
     'blender': (2, 7, 1),
     'location': 'File > Import-Export',
     'description': 'Export ThreeJs scenes',
@@ -53,21 +53,22 @@ class MATERIAL_PT_hello(bpy.types.Panel):
     def draw(self, context):
         layout = self.layout
         mat = context.material
+    
+        if mat is not None:
+            row = layout.row()
+            row.label(text='Selected material: %s' % mat.name )
 
-        row = layout.row()
-        row.label(text='Selected material: %s' % mat.name )
+            row = layout.row()
+            row.prop(mat, 'threeio_blending_type', 
+                text='Blending type' )
 
-        row = layout.row()
-        row.prop(mat, 'threeio_blending_type', 
-            text='Blending type' )
+            row = layout.row()
+            row.prop(mat, 'threeio_depth_write', 
+                text='Enable depth writing' )
 
-        row = layout.row()
-        row.prop(mat, 'threeio_depth_write', 
-            text='Enable depth writing' )
-
-        row = layout.row()
-        row.prop(mat, 'threeio_depth_test', 
-            text='Enable depth testing' )
+            row = layout.row()
+            row.prop(mat, 'threeio_depth_test', 
+                text='Enable depth testing' )
 
 def _mag_filters(index):
     types = (constants.LINEAR_FILTERS.LINEAR,
@@ -168,7 +169,8 @@ def save_settings_export(properties):
         constants.COPY_TEXTURES: properties.option_copy_textures,
 
         constants.SCENE: properties.option_export_scene,
-        constants.EMBED: properties.option_embed_meshes,
+        constants.EMBED_GEOMETRY: properties.option_embed_geometry,
+        constants.EMBED_ANIMATION: properties.option_embed_animation,
         constants.LIGHTS: properties.option_lights,
         constants.CAMERAS: properties.option_cameras,
 
@@ -240,8 +242,12 @@ def restore_settings_export(properties):
     ## Scene {
     properties.option_export_scene = settings.get(
         constants.SCENE, constants.EXPORT_OPTIONS[constants.SCENE])
-    properties.option_embed_meshes = settings.get(
-        constants.EMBED, constants.EXPORT_OPTIONS[constants.EMBED])
+    properties.option_embed_geometry = settings.get(
+        constants.EMBED_GEOMETRY, 
+        constants.EXPORT_OPTIONS[constants.EMBED_GEOMETRY])
+    properties.option_embed_animation = settings.get(
+        constants.EMBED_ANIMATION, 
+        constants.EXPORT_OPTIONS[constants.EMBED_ANIMATION])
     properties.option_lights = settings.get(
         constants.LIGHTS, constants.EXPORT_OPTIONS[constants.LIGHTS])
     properties.option_cameras = settings.get(
@@ -260,6 +266,17 @@ def restore_settings_export(properties):
         constants.FRAME_STEP, constants.EXPORT_OPTIONS[constants.FRAME_STEP])
     ## }
 
+def compression_types():
+    types = [(constants.NONE, constants.NONE, constants.NONE)]
+
+    try:
+        import msgpack
+        types.append((constants.MSGPACK, constants.MSGPACK, 
+            constants.MSGPACK))
+    except ImportError:
+        pass
+
+    return types
 
 class ExportThreeIO(bpy.types.Operator, ExportHelper):
 
@@ -362,10 +379,15 @@ class ExportThreeIO(bpy.types.Operator, ExportHelper):
         description='Export scene', 
         default=constants.EXPORT_OPTIONS[constants.SCENE])
 
-    option_embed_meshes = BoolProperty(
-        name='Embed meshes', 
-        description='Embed meshes', 
-        default=constants.EXPORT_OPTIONS[constants.EMBED])
+    option_embed_geometry = BoolProperty(
+        name='Embed geometry', 
+        description='Embed geometry', 
+        default=constants.EXPORT_OPTIONS[constants.EMBED_GEOMETRY])
+
+    option_embed_animation = BoolProperty(
+        name='Embed animation', 
+        description='Embed animation data with the geometry data', 
+        default=constants.EXPORT_OPTIONS[constants.EMBED_ANIMATION])
 
     option_copy_textures = BoolProperty(
         name='Copy textures', 
@@ -400,15 +422,11 @@ class ExportThreeIO(bpy.types.Operator, ExportHelper):
         soft_min=1, 
         soft_max=1000, 
         default=1)
-
-    compression_types = [
-        (constants.NONE, constants.NONE, constants.NONE),
-        (constants.MSGPACK, constants.MSGPACK, constants.MSGPACK)]
-
+ 
     option_compression = EnumProperty(
         name='Compression', 
         description = 'Compression options', 
-        items=compression_types, 
+        items=compression_types(), 
         default=constants.NONE)
 
     def invoke(self, context, event):
@@ -430,7 +448,7 @@ class ExportThreeIO(bpy.types.Operator, ExportHelper):
             filepath = '%s%s' % (filepath[:-4], constants.PACK)
 
         from threeio import exporter
-        if settings[constants.SCALE]:
+        if settings[constants.SCENE]:
             exporter.export_scene(filepath, settings)
         else:
             exporter.export_geometry(filepath, settings)
@@ -446,13 +464,10 @@ class ExportThreeIO(bpy.types.Operator, ExportHelper):
 
         row = layout.row()
         row.prop(self.properties, 'option_vertices')
-        row.enabled = self.properties.option_vertices
         row.prop(self.properties, 'option_faces')
-        row.enabled = self.properties.option_faces
 
         row = layout.row()
         row.prop(self.properties, 'option_normals')
-        row.enabled = self.properties.option_normals
 
         row = layout.row()
         row.prop(self.properties, 'option_bones')
@@ -509,7 +524,12 @@ class ExportThreeIO(bpy.types.Operator, ExportHelper):
 
         row = layout.row()
         row.prop(self.properties, 'option_export_scene')
-        row.prop(self.properties, 'option_embed_meshes')
+
+        row = layout.row()
+        row.prop(self.properties, 'option_embed_geometry')
+
+        row = layout.row()
+        row.prop(self.properties, 'option_embed_animation')
 
         row = layout.row()
         row.prop(self.properties, 'option_lights')

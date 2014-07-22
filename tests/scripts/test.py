@@ -80,7 +80,22 @@ def copy_for_review(tmp_json, tag):
             dst = os.path.join(tag_dir, url)
             print('moving %s > %s' % (src, dst))
             shutil.move(src, dst)
+    elif data['metadata']['type'] == 'Geometry':
+        print('looking for external animation files')
+        for key in ('animation', 'morphTargets'):
+            try:
+                value = data[key]
+            except KeyError:
+                continue
 
+            if not isinstance(value, str):
+                continue
+
+            src = os.path.join(dir_tmp, value)
+            dst = os.path.join(tag_dir, value)
+            print('moving %s > %s' % (src, dst))
+            shutil.move(src, dst)
+            
 
 def _parse_geometry_materials(materials):
     maps = ('mapDiffuse', 'mapSpecular', 'mapBump',
