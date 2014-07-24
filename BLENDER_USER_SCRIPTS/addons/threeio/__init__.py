@@ -236,7 +236,11 @@ def restore_settings_export(properties):
     properties.option_compression = settings.get(
         constants.COMPRESSION, constants.NONE)
     properties.option_copy_textures = settings.get(
-        constants.COPY_TEXTURES, constants.EXPORT_OPTIONS[constants.COPY_TEXTURES])
+        constants.COPY_TEXTURES, 
+        constants.EXPORT_OPTIONS[constants.COPY_TEXTURES])
+    properties.option_embed_animation = settings.get(
+        constants.EMBED_ANIMATION, 
+        constants.EXPORT_OPTIONS[constants.EMBED_ANIMATION])
     ## }
 
     ## Scene {
@@ -245,9 +249,6 @@ def restore_settings_export(properties):
     properties.option_embed_geometry = settings.get(
         constants.EMBED_GEOMETRY, 
         constants.EXPORT_OPTIONS[constants.EMBED_GEOMETRY])
-    properties.option_embed_animation = settings.get(
-        constants.EMBED_ANIMATION, 
-        constants.EXPORT_OPTIONS[constants.EMBED_ANIMATION])
     properties.option_lights = settings.get(
         constants.LIGHTS, constants.EXPORT_OPTIONS[constants.LIGHTS])
     properties.option_cameras = settings.get(
@@ -514,6 +515,9 @@ class ExportThreeIO(bpy.types.Operator, ExportHelper):
 
         row = layout.row()
         row.prop(self.properties, 'option_copy_textures')
+
+        row = layout.row()
+        row.prop(self.properties, 'option_embed_animation')
         ## }
 
         layout.separator()
@@ -527,9 +531,6 @@ class ExportThreeIO(bpy.types.Operator, ExportHelper):
 
         row = layout.row()
         row.prop(self.properties, 'option_embed_geometry')
-
-        row = layout.row()
-        row.prop(self.properties, 'option_embed_animation')
 
         row = layout.row()
         row.prop(self.properties, 'option_lights')
