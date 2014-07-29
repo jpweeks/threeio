@@ -53,10 +53,9 @@ class MESH_PT_hello(bpy.types.Panel):
     bl_context = 'data'
     
     def draw(self, context):
-        layout = self.layout
-
-        row = layout.row()
-        row.prop(context.mesh, 'threeio_geometry_type', text='Type')
+        row = self.layout.row()
+        if context.mesh:
+            row.prop(context.mesh, 'threeio_geometry_type', text='Type')
 
 def _blending_types(index):
     types = (constants.BLENDING.NONE, constants.BLENDING.NORMAL, 
