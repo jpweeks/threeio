@@ -60,6 +60,11 @@ ROUND = 6
 EMBED_GEOMETRY = 'embedGeometry'
 EMBED_ANIMATION = 'embedAnimation'
 
+GLOBAL = 'global'
+BUFFER_GEOMETRY = 'bufferGeometry'
+GEOMETRY = 'geometry'
+GEOMETRY_TYPE = 'geometryType'
+
 CRITICAL = 'critical'
 ERROR = 'error'
 WARNING = 'warning'
@@ -96,5 +101,6 @@ EXPORT_OPTIONS = {
     ROUND_OFF: False,
     ROUND_VALUE: ROUND,
     EMBED_GEOMETRY: True,
-    EMBED_ANIMATION: True
+    EMBED_ANIMATION: True,
+    GEOMETRY_TYPE: GEOMETRY
 }

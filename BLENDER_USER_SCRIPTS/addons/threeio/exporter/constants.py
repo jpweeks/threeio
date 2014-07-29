@@ -43,6 +43,8 @@ from ..constants import  (
     NONE,
     PACK,
     JSON,
+    BUFFER_GEOMETRY,
+    GEOMETRY
     EXPORT_OPTIONS as OPTIONS
 )
 
@@ -78,7 +80,6 @@ DATA = 'data'
 TYPE = 'type'
 
 MATERIAL = 'material'
-GEOMETRY = 'geometry'
 OBJECT = 'object'
 PERSPECTIVE_CAMERA = 'PerspectiveCamera'
 ORTHOGRAPHIC_CAMERA = 'OrthographicCamera'
