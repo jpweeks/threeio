@@ -61,7 +61,7 @@ EMBED_GEOMETRY = 'embedGeometry'
 EMBED_ANIMATION = 'embedAnimation'
 
 GLOBAL = 'global'
-BUFFER_GEOMETRY = 'bufferGeometry'
+BUFFER_GEOMETRY = 'BufferGeometry'
 GEOMETRY = 'geometry'
 GEOMETRY_TYPE = 'geometryType'
 

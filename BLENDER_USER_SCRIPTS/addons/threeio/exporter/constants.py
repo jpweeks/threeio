@@ -44,7 +44,8 @@ from ..constants import  (
     PACK,
     JSON,
     BUFFER_GEOMETRY,
-    GEOMETRY
+    GEOMETRY,
+    GEOMETRY_TYPE,
     EXPORT_OPTIONS as OPTIONS
 )
 
@@ -105,6 +106,14 @@ POSITION = 'position'
 QUATERNION = 'quaternion'
 ROTATION ='rotation'
 SCALE = 'scale'
+
+UV = 'uv'
+ATTRIBUTES = 'attributes'
+NORMAL = 'normal'
+ITEM_SIZE = 'itemSize'
+ARRAY = 'array'
+
+FLOAT_32 = 'Float32Array'
 
 VISIBLE = 'visible'
 CAST_SHADOW = 'castShadow'

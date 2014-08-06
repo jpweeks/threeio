@@ -6,14 +6,24 @@ FORMAT_VERSION = 3
 
 
 class Geometry(base_classes.BaseNode):
-    _defaults = {
-        constants.TYPE: constants.GEOMETRY.title()
-    }
-
     def __init__(self, node, parent=None):
         logger.debug('Geometry().__init__(%s)', node)
+        
+        #@TODO: maybe better to have `three` constants for
+        #       strings that are specific to `three` properties
+        geo_type = constants.GEOMETRY.title()
+        if parent.options.get(constants.GEOMETRY_TYPE):
+            opt_type = parent.options[constants.GEOMETRY_TYPE]
+            if opt_type == constants.BUFFER_GEOMETRY:
+                geo_type = constants.BUFFER_GEOMETRY
+            else:
+                logger.error('Unknown geometry type', opt_type)
+
+        logger.info('Setting %s to "%s"', node, geo_type)
+
+        self._defaults[constants.TYPE] = geo_type
         base_classes.BaseNode.__init__(self, node, parent=parent,
-            type=constants.GEOMETRY.title())
+            type=geo_type)
 
     @property
     def animation_filename(self):
@@ -79,26 +89,10 @@ class Geometry(base_classes.BaseNode):
             constants.VERSION: FORMAT_VERSION
         }
 
-        skip = (constants.TYPE, constants.FACES, constants.UUID,
-            constants.ANIMATION, constants.SKIN_INDICES,
-            constants.SKIN_WEIGHTS, constants.NAME)
-        vectors = (constants.VERTICES, constants.NORMALS)
-
-        for key in self.keys():
-            if key in vectors:
-                try:
-                    metadata[key] = int(len(self[key])/3)
-                except KeyError:
-                    pass
-                continue
-
-            if key in skip: continue
-
-            metadata[key] = len(self[key])
-
-        faces = self.face_count
-        if faces > 0:
-            metadata[constants.FACES] = faces
+        if self[constants.TYPE] == constants.GEOMETRY.title():
+            self.__geometry_metadata(metadata)
+        else:
+            self.__buffer_geometry_metadata(metadata)
 
         return metadata
 
@@ -130,7 +124,171 @@ class Geometry(base_classes.BaseNode):
 
     def parse(self):
         logger.debug('Geometry().parse()')
+        if self[constants.TYPE] == constants.GEOMETRY.title():
+            logger.info('Parsing Geometry format')
+            self.__parse_geometry()
+        else:
+            logger.info('Parsing BufferGeometry format')
+            self.__parse_buffer_geometry()
 
+    def register_textures(self):
+        logger.debug('Geometry().register_textures()')
+        return api.mesh.texture_registration(self.node) 
+
+    def write(self, filepath=None):
+        logger.debug('Geometry().write(filepath=%s)', filepath)
+
+        filepath = filepath or self.scene.filepath
+
+        io.dump(filepath, self.copy(scene=False), 
+            options=self.scene.options) 
+
+        if self.options.get(constants.MAPS):
+            logger.info('Copying textures for %s', self.node)
+            self.copy_textures()
+
+    def write_animation(self, filepath):
+        logger.debug('Geometry().write_animation(%s)', filepath)
+
+        for key in (constants.MORPH_TARGETS, constants.ANIMATION):
+            try:
+                data = self[key]
+                break
+            except KeyError:
+                pass
+        else:
+            logger.info('%s has no animation data', self.node)
+            return
+
+        filepath = os.path.join(filepath, self.animation_filename)
+        if filepath:
+            logger.info('Dumping animation data to %s', filepath)
+            io.dump(filepath, data, options=self.scene.options)
+            return filepath
+        else:
+            logger.warning('Could not determine a filepath for '\
+                'animation data. Nothing written to disk.')
+
+    def _component_data(self):
+        logger.debug('Geometry()._component_data()')
+        
+        if self[constants.TYPE] != constants.GEOMETRY.title():
+            return self[constants.ATTRIBUTES]
+
+        components = [constants.VERTICES, constants.FACES, 
+            constants.UVS, constants.COLORS, constants.NORMALS,
+            constants.BONES, constants.SKIN_WEIGHTS, 
+            constants.SKIN_INDICES, constants.NAME]
+
+        data = {}
+        anim_components = [constants.MORPH_TARGETS, constants.ANIMATION]
+        if self.options.get(constants.EMBED_ANIMATION):
+            components.extend(anim_components)
+        else:
+            for component in anim_components:
+                try:
+                    self[component]
+                except KeyError:
+                    pass
+                else:
+                    data[component] = os.path.basename(
+                        self.animation_filename) 
+            else:
+                logger.info('No animation data found for %s', self.node)
+
+        for component in components:
+            try:
+                data[component] = self[component]
+            except KeyError:
+                logger.debug('Component %s not found', component)
+                pass
+
+        return data
+
+    def _geometry_format(self):
+        data = self._component_data()
+
+        if self[constants.TYPE] != constants.GEOMETRY.title():
+            data = {constants.ATTRIBUTES: data}
+
+        data[constants.METADATA] = {
+            constants.TYPE: self[constants.TYPE]
+        }
+
+        data[constants.METADATA].update(self.metadata)
+
+        return data
+
+    def __buffer_geometry_metadata(self, metadata):
+        for key, value in self[constants.ATTRIBUTES].items():
+            size = value[constants.ITEM_SIZE]
+            array = value[constants.ARRAY]
+            metadata[key] = len(array)/size
+        
+    def __geometry_metadata(self, metadata): 
+        skip = (constants.TYPE, constants.FACES, constants.UUID,
+            constants.ANIMATION, constants.SKIN_INDICES,
+            constants.SKIN_WEIGHTS, constants.NAME)
+        vectors = (constants.VERTICES, constants.NORMALS)
+
+        for key in self.keys():
+            if key in vectors:
+                try:
+                    metadata[key] = int(len(self[key])/3)
+                except KeyError:
+                    pass
+                continue
+
+            if key in skip: continue
+
+            metadata[key] = len(self[key])
+
+        faces = self.face_count
+        if faces > 0:
+            metadata[constants.FACES] = faces
+
+    def _scene_format(self):
+        data = {
+            constants.UUID: self[constants.UUID],
+            constants.TYPE: self[constants.TYPE].title()
+        }
+
+        component_data = self._component_data()
+        if self[constants.TYPE] == constants.GEOMETRY.title():
+            data[constants.DATA] = component_data
+        else:
+            data[constants.ATTRIBUTES] = component_data 
+
+        data[constants.DATA].update({
+            constants.METADATA: self.metadata
+        })
+
+        return data 
+
+    def __parse_buffer_geometry(self):
+        position = api.mesh.buffer_position(self.node, self.options)
+        uv = api.mesh.buffer_uv(self.node, self.options)
+        normal = api.mesh.buffer_normal(self.node, self.options)
+
+        self[constants.ATTRIBUTES] = {}
+
+        dispatch = (
+            (constants.POSITION, position, 3), 
+            (constants.UV, uv, 2), 
+            (constants.NORMAL, normal, 3))
+
+        for key, array, size in dispatch: 
+            if not array: 
+                continue
+
+            self[constants.ATTRIBUTES][key] = {
+                constants.ITEM_SIZE: size,
+                constants.TYPE: constants.FLOAT_32,
+                constants.ARRAY: array
+            }
+
+
+    def __parse_geometry(self):
         if self.options.get(constants.VERTICES):
             logger.info('Parsing %s', constants.VERTICES)
             self[constants.VERTICES] = api.mesh.vertices(
@@ -178,95 +336,3 @@ class Geometry(base_classes.BaseNode):
             self[constants.MORPH_TARGETS] = api.mesh.morph_targets(
                 self.node, self.options)
 
-    def register_textures(self):
-        logger.debug('Geometry().register_textures()')
-        return api.mesh.texture_registration(self.node) 
-
-    def write(self, filepath=None):
-        logger.debug('Geometry().write(filepath=%s)', filepath)
-
-        filepath = filepath or self.scene.filepath
-
-        io.dump(filepath, self.copy(scene=False), 
-            options=self.scene.options) 
-
-        if self.options.get(constants.MAPS):
-            logger.info('Copying textures for %s', self.node)
-            self.copy_textures()
-
-    def write_animation(self, filepath):
-        logger.debug('Geometry().write_animation(%s)', filepath)
-
-        for key in (constants.MORPH_TARGETS, constants.ANIMATION):
-            try:
-                data = self[key]
-                break
-            except KeyError:
-                pass
-        else:
-            logger.info('%s has no animation data', self.node)
-            return
-
-        filepath = os.path.join(filepath, self.animation_filename)
-        if filepath:
-            logger.info('Dumping animation data to %s', filepath)
-            io.dump(filepath, data, options=self.scene.options)
-            return filepath
-        else:
-            logger.warning('Could not determine a filepath for '\
-                'animation data. Nothing written to disk.')
-
-    def _component_data(self):
-        logger.debug('Geometry()._component_data()')
-        components = [constants.VERTICES, constants.FACES, 
-            constants.UVS, constants.COLORS, constants.NORMALS,
-            constants.BONES, constants.SKIN_WEIGHTS, 
-            constants.SKIN_INDICES, constants.NAME]
-
-        data = {}
-        anim_components = [constants.MORPH_TARGETS, constants.ANIMATION]
-        if self.options.get(constants.EMBED_ANIMATION):
-            components.extend(anim_components)
-        else:
-            for component in anim_components:
-                try:
-                    self[component]
-                except KeyError:
-                    pass
-                else:
-                    data[component] = os.path.basename(
-                        self.animation_filename) 
-            else:
-                logger.info('No animation data found for %s', self.node)
-
-        for component in components:
-            try:
-                data[component] = self[component]
-            except KeyError:
-                logger.debug('Component %s not found', component)
-                pass
-
-        return data
-
-    def _geometry_format(self):
-        data = self._component_data()
-        data[constants.METADATA] = {
-            constants.TYPE: self[constants.TYPE]
-        }
-
-        data[constants.METADATA].update(self.metadata)
-
-        return data
-
-    def _scene_format(self):
-        data = {
-            constants.UUID: self[constants.UUID],
-            constants.TYPE: self[constants.TYPE].title(),
-            constants.DATA: self._component_data()
-        }
-
-        data[constants.DATA].update({
-            constants.METADATA: self.metadata
-        })
-
-        return data 

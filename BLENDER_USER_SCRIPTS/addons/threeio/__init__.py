@@ -30,10 +30,11 @@ bl_info = {
 
 def _geometry_types():
     types = [
-        (constants.GLOBAL, constants.GLOBAL.title(), constants.GLOBAL),
+        (constants.GLOBAL, constants.GLOBAL.title(), 
+        constants.GLOBAL),
         (constants.GEOMETRY, constants.GEOMETRY.title(), 
         constants.GEOMETRY),
-        (constants.BUFFER_GEOMETRY, 'Buffer Geometry', 
+        (constants.BUFFER_GEOMETRY, constants.BUFFER_GEOMETRY, 
         constants.BUFFER_GEOMETRY),
     ]
 
@@ -142,18 +143,20 @@ class TEXTURE_PT_hello(bpy.types.Panel):
     bl_region_type = 'WINDOW'
     bl_context = 'texture'
 
+    #@TODO: possible to make cycles compatible?
     def draw(self, context):
         layout = self.layout
         tex = context.texture
 
-        row = layout.row()
-        row.prop(tex, 'threeio_mapping', text='Mapping')
+        if tex is not None:
+            row = layout.row()
+            row.prop(tex, 'threeio_mapping', text='Mapping')
 
-        row = layout.row()
-        row.prop(tex, 'threeio_mag_filter', text='Mag Filter')
+            row = layout.row()
+            row.prop(tex, 'threeio_mag_filter', text='Mag Filter')
 
-        row = layout.row()
-        row.prop(tex, 'threeio_min_filter', text='Min Filter')
+            row = layout.row()
+            row.prop(tex, 'threeio_min_filter', text='Min Filter')
 
 bpy.types.Object.threeio_export = bpy.props.BoolProperty(default=True)
 

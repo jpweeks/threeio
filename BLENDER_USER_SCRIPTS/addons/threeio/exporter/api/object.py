@@ -237,6 +237,24 @@ def visible(obj):
 def extract_mesh(obj, options, recalculate=False):
     logger.debug('object.extract_mesh(%s, %s)', obj, options)
     mesh = obj.to_mesh(context.scene, True, RENDER)
+    mesh.threeio_geometry_type = obj.data.threeio_geometry_type
+
+    opt_buffer = options.get(constants.GEOMETRY_TYPE) 
+    opt_buffer = opt_buffer == constants.BUFFER_GEOMETRY
+    prop_buffer = mesh.threeio_geometry_type == constants.BUFFER_GEOMETRY
+    if opt_buffer or prop_buffer:
+        original_mesh = obj.data
+        obj.data = mesh
+    
+        is_selected = obj.select
+        obj.select = False
+        obj.select = True
+        bpy.ops.object.modifier_add(type='TRIANGULATE')
+        bpy.ops.object.modifier_apply(apply_as='DATA', 
+            modifier='Triangulate')
+        obj.data = original_mesh
+        if not is_selected:
+            obj.select = False
 
     if recalculate:
         logger.info('Recalculating normals')
