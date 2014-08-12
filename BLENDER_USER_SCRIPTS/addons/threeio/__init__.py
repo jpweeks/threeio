@@ -18,7 +18,7 @@ SETTINGS_FILE_EXPORT = 'threeio_settings_export.js'
 bl_info = {
     'name': 'ThreeIO',
     'author': 'Ed Caspersen',
-    'version': (0, 4, 0),
+    'version': (0, 5, 0),
     'blender': (2, 7, 1),
     'location': 'File > Import-Export',
     'description': 'Export ThreeJs scenes',
@@ -27,6 +27,36 @@ bl_info = {
     'tracker_url':  'https://github.com/repsac/threeio/issues',
     'category': 'Import-Export'
 }
+
+def _geometry_types():
+    types = [
+        (constants.GLOBAL, constants.GLOBAL.title(), 
+        constants.GLOBAL),
+        (constants.GEOMETRY, constants.GEOMETRY.title(), 
+        constants.GEOMETRY),
+        (constants.BUFFER_GEOMETRY, constants.BUFFER_GEOMETRY, 
+        constants.BUFFER_GEOMETRY),
+    ]
+
+    return types
+
+bpy.types.Mesh.threeio_geometry_type = EnumProperty(
+    name='Geometry type',
+    description='Geometry type',
+    items=_geometry_types(),
+    default=constants.GLOBAL)
+
+class MESH_PT_hello(bpy.types.Panel):
+
+    bl_label = 'ThreeIO'
+    bl_space_type = 'PROPERTIES'
+    bl_region_type = 'WINDOW'
+    bl_context = 'data'
+    
+    def draw(self, context):
+        row = self.layout.row()
+        if context.mesh:
+            row.prop(context.mesh, 'threeio_geometry_type', text='Type')
 
 def _blending_types(index):
     types = (constants.BLENDING.NONE, constants.BLENDING.NORMAL, 
@@ -113,18 +143,20 @@ class TEXTURE_PT_hello(bpy.types.Panel):
     bl_region_type = 'WINDOW'
     bl_context = 'texture'
 
+    #@TODO: possible to make cycles compatible?
     def draw(self, context):
         layout = self.layout
         tex = context.texture
 
-        row = layout.row()
-        row.prop(tex, 'threeio_mapping', text='Mapping')
+        if tex is not None:
+            row = layout.row()
+            row.prop(tex, 'threeio_mapping', text='Mapping')
 
-        row = layout.row()
-        row.prop(tex, 'threeio_mag_filter', text='Mag Filter')
+            row = layout.row()
+            row.prop(tex, 'threeio_mag_filter', text='Mag Filter')
 
-        row = layout.row()
-        row.prop(tex, 'threeio_min_filter', text='Min Filter')
+            row = layout.row()
+            row.prop(tex, 'threeio_min_filter', text='Min Filter')
 
 bpy.types.Object.threeio_export = bpy.props.BoolProperty(default=True)
 
@@ -153,6 +185,7 @@ def save_settings_export(properties):
         constants.NORMALS: properties.option_normals,
         constants.SKINNING: properties.option_skinning,
         constants.BONES: properties.option_bones,
+        constants.GEOMETRY_TYPE: properties.option_geometry_type,
 
         constants.MATERIALS: properties.option_materials,
         constants.UVS: properties.option_uv_coords,
@@ -207,6 +240,9 @@ def restore_settings_export(properties):
         constants.SKINNING, constants.EXPORT_OPTIONS[constants.SKINNING])
     properties.option_bones = settings.get(
         constants.BONES, constants.EXPORT_OPTIONS[constants.BONES])
+    properties.option_geometry_type = settings.get(
+        constants.GEOMETRY_TYPE,
+        constants.EXPORT_OPTIONS[constants.GEOMETRY_TYPE])
     ## }
 
     ## Materials {
@@ -215,7 +251,8 @@ def restore_settings_export(properties):
     properties.option_uv_coords = settings.get(
         constants.UVS, constants.EXPORT_OPTIONS[constants.UVS])
     properties.option_face_materials = settings.get(
-        constants.FACE_MATERIALS, constants.EXPORT_OPTIONS[constants.FACE_MATERIALS])
+        constants.FACE_MATERIALS, 
+        constants.EXPORT_OPTIONS[constants.FACE_MATERIALS])
     properties.option_maps = settings.get(
         constants.MAPS, constants.EXPORT_OPTIONS[constants.MAPS])
     properties.option_colors = settings.get(
@@ -375,6 +412,12 @@ class ExportThreeIO(bpy.types.Operator, ExportHelper):
         items=logging_types, 
         default=constants.DEBUG)
 
+    option_geometry_type = EnumProperty(
+        name='Type',
+        description='Geometry type',
+        items=_geometry_types()[1:],
+        default=constants.GEOMETRY)
+
     option_export_scene = BoolProperty(
         name='Scene', 
         description='Export scene', 
@@ -473,6 +516,9 @@ class ExportThreeIO(bpy.types.Operator, ExportHelper):
         row = layout.row()
         row.prop(self.properties, 'option_bones')
         row.prop(self.properties, 'option_skinning')
+
+        row = layout.row()
+        row.prop(self.properties, 'option_geometry_type')
         ## }
 
         layout.separator()

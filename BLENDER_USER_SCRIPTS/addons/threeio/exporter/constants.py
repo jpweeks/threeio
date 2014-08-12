@@ -43,6 +43,9 @@ from ..constants import  (
     NONE,
     PACK,
     JSON,
+    BUFFER_GEOMETRY,
+    GEOMETRY,
+    GEOMETRY_TYPE,
     EXPORT_OPTIONS as OPTIONS
 )
 
@@ -78,7 +81,6 @@ DATA = 'data'
 TYPE = 'type'
 
 MATERIAL = 'material'
-GEOMETRY = 'geometry'
 OBJECT = 'object'
 PERSPECTIVE_CAMERA = 'PerspectiveCamera'
 ORTHOGRAPHIC_CAMERA = 'OrthographicCamera'
@@ -104,6 +106,14 @@ POSITION = 'position'
 QUATERNION = 'quaternion'
 ROTATION ='rotation'
 SCALE = 'scale'
+
+UV = 'uv'
+ATTRIBUTES = 'attributes'
+NORMAL = 'normal'
+ITEM_SIZE = 'itemSize'
+ARRAY = 'array'
+
+FLOAT_32 = 'Float32Array'
 
 VISIBLE = 'visible'
 CAST_SHADOW = 'castShadow'

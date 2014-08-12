@@ -77,6 +77,11 @@ class Scene(base_classes.BaseScene):
         data = {}
         
         embed_anim = self.options.get(constants.EMBED_ANIMATION, True)
+
+        compression = self.options.get(constants.COMPRESSION)
+        extension = constants.EXTENSIONS.get(compression, 
+            constants.EXTENSIONS[constants.JSON])
+
         for key, value in self.items():
             if key == constants.GEOMETRIES and \
             not self.options[constants.EMBED_GEOMETRY]:
@@ -86,10 +91,7 @@ class Scene(base_classes.BaseScene):
                     geom_data.pop(constants.DATA)
 
                     dirname = os.path.dirname(self.filepath)
-                    #@TODO: extension will need to change when 
-                    #       compresion is implemented
-                    url = 'geometry.%s.%s' % (geometry.node, 
-                        constants.JSON)
+                    url = 'geometry.%s%s' % (geometry.node, extension)
                     geometry_file = os.path.join(dirname, url)
 
                     geometry.write(filepath=geometry_file)

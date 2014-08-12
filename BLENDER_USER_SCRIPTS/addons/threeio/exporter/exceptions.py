@@ -5,3 +5,4 @@ class UnsupportedObjectType(ThreeIOError): pass
 class GeometryError(ThreeIOError): pass
 class SelectionError(ThreeIOError): pass
 class NGonError(ThreeIOError): pass
+class BufferGeometryError(ThreeIOError): pass

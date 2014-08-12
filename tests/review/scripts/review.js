@@ -116,7 +116,18 @@ function loadData( data, url ) {
 
         animate();
 
+    } else if ( data.metadata.type == 'BufferGeometry' ) {
 
+        var loader = new THREE.BufferGeometryLoader();
+
+        var bufferGeometry = loader.parse( data );
+
+        var material = new THREE.MeshLambertMaterial( { color: 0xb8b8b8 } );
+        var mesh = new THREE.Mesh( bufferGeometry, material );
+        setupScene();
+        scene.add( mesh );
+        animate();
+    
     } else if ( data.metadata.type == 'Object' ) { 
 
         var onLoad = function ( parsed ) {

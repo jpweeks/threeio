@@ -66,6 +66,70 @@ def bones(mesh):
 
 
 @_mesh
+def buffer_normal(mesh, options):
+    normals_ = []
+    round_off, round_val = utilities.rounding(options)
+
+    for face in mesh.tessfaces:
+        vert_count = len(face.vertices)
+        if vert_count is not 3:
+            msg = 'Non-triangulated face detected'
+            raise exceptions.BufferGeometryError(msg)
+
+        for vertex_index in face.vertices:
+            normal = mesh.vertices[vertex_index].normal
+            vector = (normal.x, normal.y, normal.z)
+            if round_off:
+                vector = utilities.round_off(vector, round_val)
+
+            normals_.extend(vector)
+
+    return normals_
+
+
+
+
+@_mesh
+def buffer_position(mesh, options):
+    position = []
+    round_off, round_val = utilities.rounding(options)
+
+    for face in mesh.tessfaces:
+        vert_count = len(face.vertices)
+        if vert_count is not 3:
+            msg = 'Non-triangulated face detected'
+            raise exceptions.BufferGeometryError(msg)
+
+        for vertex_index in face.vertices:
+            vertex = mesh.vertices[vertex_index]
+            vector = (vertex.co.x, vertex.co.y, vertex.co.z)
+            if round_off:
+                vector = utilities.round_off(vector, round_val)
+
+            position.extend(vector)
+
+    return position
+
+
+@_mesh
+def buffer_uv(mesh, options):
+    if len(mesh.uv_layers) is 0:
+        return
+    elif len(mesh.uv_layers) > 1:
+        # if memory serves me correctly buffer geometry
+        # only uses one UV layer
+        logger.warning('%s has more than 1 UV layer', mesh.name )
+
+    round_off, round_val = utilities.rounding(options)
+    uvs_ = []
+    for uv in mesh.uv_layers[0].data:
+        uv = (uv.uv[0], uv.uv[1])
+        if round_off:
+            uv = utilities.round_off(uv, round_val)
+    
+    return uvs_
+
+@_mesh
 def faces(mesh, options):
     logger.debug('mesh.faces(%s, %s)', mesh, options)
     vertex_uv = len(mesh.uv_textures) > 0
@@ -96,16 +160,16 @@ def faces(mesh, options):
 
     logger.info('Parsing %d faces', len(mesh.tessfaces))
     for face in mesh.tessfaces:
-        verts = len(face.vertices)
+        vert_count = len(face.vertices)
 
-        if verts not in (3, 4):
+        if vert_count not in (3, 4):
             logger.error('%d vertices for face %d detected', 
-                verts, face.index)
+                vert_count, face.index)
             raise exceptions.NGonError('ngons are not supported')
 
         materials = face.material_index is not None and opt_materials
         mask = {
-            constants.QUAD: verts is 4,
+            constants.QUAD: vert_count is 4,
             constants.MATERIALS: materials,
             constants.UVS: opt_uvs,
             constants.NORMALS: opt_normals,
@@ -511,8 +575,8 @@ def _normals(mesh, options):
 
     for face in mesh.tessfaces:
 
-        for vert_index in face.vertices:
-            normal = mesh.vertices[vert_index].normal
+        for vertex_index in face.vertices:
+            normal = mesh.vertices[vertex_index].normal
             vector = (normal.x, normal.y, normal.z)
             if round_off:
                 vector = utilities.round_off(vector, round_val)

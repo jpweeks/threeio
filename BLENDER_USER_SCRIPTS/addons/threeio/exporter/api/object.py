@@ -227,6 +227,15 @@ def scale(obj, options):
     return vector
 
 
+@_object
+def select(obj):
+    obj.select = True
+
+
+@_object
+def unselect(obj):
+    obj.select = False
+
 
 @_object
 def visible(obj):
@@ -237,6 +246,24 @@ def visible(obj):
 def extract_mesh(obj, options, recalculate=False):
     logger.debug('object.extract_mesh(%s, %s)', obj, options)
     mesh = obj.to_mesh(context.scene, True, RENDER)
+    mesh.threeio_geometry_type = obj.data.threeio_geometry_type
+
+    opt_buffer = options.get(constants.GEOMETRY_TYPE) 
+    opt_buffer = opt_buffer == constants.BUFFER_GEOMETRY
+    prop_buffer = mesh.threeio_geometry_type == constants.BUFFER_GEOMETRY
+    if opt_buffer or prop_buffer:
+        original_mesh = obj.data
+        obj.data = mesh
+        logger.debug('swapped %s for %s', original_mesh.name, mesh.name)
+    
+        obj.select = True
+        bpy.context.scene.objects.active = obj
+        logger.info('Applying triangulation to %s', obj.data.name)
+        bpy.ops.object.modifier_add(type='TRIANGULATE')
+        bpy.ops.object.modifier_apply(apply_as='DATA', 
+            modifier='Triangulate')
+        obj.data = original_mesh
+        obj.select = False
 
     if recalculate:
         logger.info('Recalculating normals')
@@ -297,6 +324,7 @@ def prep_meshes(options):
             continue
 
         if not _on_visible_layer(obj, visible_layers): 
+            logger.info('%s is not on a visible layer', obj.name)
             continue
 
         if not obj.threeio_export: 
@@ -309,6 +337,8 @@ def prep_meshes(options):
             _MESH_MAP[mesh.name] = [obj]
             continue
 
+        logger.info('adding mesh %s.%s to prep', 
+            obj.name, obj.data.name)
         manifest = mapping.setdefault(obj.data.name, [])
         manifest.append(obj)
 
