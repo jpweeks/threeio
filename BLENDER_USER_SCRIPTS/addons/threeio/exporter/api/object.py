@@ -227,6 +227,15 @@ def scale(obj, options):
     return vector
 
 
+@_object
+def select(obj):
+    obj.select = True
+
+
+@_object
+def unselect(obj):
+    obj.select = False
+
 
 @_object
 def visible(obj):
@@ -245,16 +254,16 @@ def extract_mesh(obj, options, recalculate=False):
     if opt_buffer or prop_buffer:
         original_mesh = obj.data
         obj.data = mesh
+        logger.debug('swapped %s for %s', original_mesh.name, mesh.name)
     
-        is_selected = obj.select
-        obj.select = False
         obj.select = True
+        bpy.context.scene.objects.active = obj
+        logger.info('Applying triangulation to %s', obj.data.name)
         bpy.ops.object.modifier_add(type='TRIANGULATE')
         bpy.ops.object.modifier_apply(apply_as='DATA', 
             modifier='Triangulate')
         obj.data = original_mesh
-        if not is_selected:
-            obj.select = False
+        obj.select = False
 
     if recalculate:
         logger.info('Recalculating normals')
@@ -315,6 +324,7 @@ def prep_meshes(options):
             continue
 
         if not _on_visible_layer(obj, visible_layers): 
+            logger.info('%s is not on a visible layer', obj.name)
             continue
 
         if not obj.threeio_export: 
@@ -327,6 +337,8 @@ def prep_meshes(options):
             _MESH_MAP[mesh.name] = [obj]
             continue
 
+        logger.info('adding mesh %s.%s to prep', 
+            obj.name, obj.data.name)
         manifest = mapping.setdefault(obj.data.name, [])
         manifest.append(obj)
 

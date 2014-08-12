@@ -250,35 +250,45 @@ class Geometry(base_classes.BaseNode):
     def _scene_format(self):
         data = {
             constants.UUID: self[constants.UUID],
-            constants.TYPE: self[constants.TYPE].title()
+            constants.TYPE: self[constants.TYPE]
         }
 
         component_data = self._component_data()
         if self[constants.TYPE] == constants.GEOMETRY.title():
             data[constants.DATA] = component_data
+            data[constants.DATA].update({
+                constants.METADATA: self.metadata
+            })
         else:
-            data[constants.ATTRIBUTES] = component_data 
-
-        data[constants.DATA].update({
-            constants.METADATA: self.metadata
-        })
+            data[constants.ATTRIBUTES] = component_data
+            data.update({constants.METADATA: self.metadata}) 
+            data[constants.NAME] = self[constants.NAME]
 
         return data 
 
     def __parse_buffer_geometry(self):
-        position = api.mesh.buffer_position(self.node, self.options)
-        uv = api.mesh.buffer_uv(self.node, self.options)
-        normal = api.mesh.buffer_normal(self.node, self.options)
-
         self[constants.ATTRIBUTES] = {}
 
-        dispatch = (
-            (constants.POSITION, position, 3), 
-            (constants.UV, uv, 2), 
-            (constants.NORMAL, normal, 3))
+        options_vertices = self.options.get(constants.VERTICES)
+        option_normals = self.options.get(constants.NORMALS)
+        option_uvs = self.options.get(constants.UVS)
 
-        for key, array, size in dispatch: 
+        dispatch = (
+            (constants.POSITION, options_vertices, 
+                api.mesh.buffer_position, 3), 
+            (constants.UV, option_uvs, api.mesh.buffer_uv, 2), 
+            (constants.NORMAL, option_normals, 
+                api.mesh.buffer_normal, 3)
+        )
+
+        for key, option, func, size in dispatch: 
+
+            if not option:
+                continue
+
+            array = func(self.node, self.options)
             if not array: 
+                logger.warning('No array could be made for %s', key)
                 continue
 
             self[constants.ATTRIBUTES][key] = {
@@ -286,7 +296,6 @@ class Geometry(base_classes.BaseNode):
                 constants.TYPE: constants.FLOAT_32,
                 constants.ARRAY: array
             }
-
 
     def __parse_geometry(self):
         if self.options.get(constants.VERTICES):

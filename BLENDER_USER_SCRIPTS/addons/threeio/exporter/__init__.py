@@ -39,18 +39,31 @@ def _error_handler(func):
 
 @_error_handler
 def export_scene(filepath, options):
-    scene_ = scene.Scene(filepath, options=options)
-    scene_.parse()
-    scene_.write()
+    selected = []
+    for obj in api.selected_objects():
+        api.object.unselect(obj)
+        selected.append(obj)
+    active = api.active_object()
+
+    try:
+        scene_ = scene.Scene(filepath, options=options)
+        scene_.parse()
+        scene_.write()
+    except:
+        _restore_selection(selected, active)
+        raise
+        
+    _restore_selection(selected, active)
 
 
 @_error_handler
 def export_geometry(filepath, options, node=None):
     if node is None:
-        for node in api.selected_objects(['MESH']):
-            break
-        else:
+        node = api.active_object()
+        if node is None:
             raise exceptions.SelectionError('Nothing selected')
+        if node.type != 'MESH':
+            raise exceptions.GeometryError('Not a valid mesh object')
     
     mesh = api.object.mesh(node, options)
     parent = base_classes.BaseScene(filepath, options)
@@ -60,3 +73,10 @@ def export_geometry(filepath, options, node=None):
     
     if not options.get(constants.EMBED_ANIMATION, True):
         geo.write_animation(os.path.dirname(filepath))
+
+
+def _restore_selection(objects, active):
+    for obj in objects:
+        api.object.select(obj)
+
+    api.set_active_object(active)
