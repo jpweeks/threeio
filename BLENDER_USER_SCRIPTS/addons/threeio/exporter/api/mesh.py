@@ -144,7 +144,7 @@ def faces(mesh, options):
 
     opt_colours = options[constants.COLORS] and has_colors
     opt_uvs = options[constants.UVS] and vertex_uv
-    opt_materials = options[constants.MATERIALS]
+    opt_materials = options.get(constants.FACE_MATERIALS)
     opt_normals = options[constants.NORMALS]
     logger.debug('Vertex colours enabled = %s', opt_colours)
     logger.debug('UVS enabled = %s', opt_uvs)
