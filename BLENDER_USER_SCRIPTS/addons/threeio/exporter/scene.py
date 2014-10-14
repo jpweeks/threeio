@@ -129,9 +129,13 @@ class Scene(base_classes.BaseScene):
 
     def __parse_geometries(self):
         logger.debug('Scene().__parse_geometries()')
+
+        # this is an important step. please refer to the doc string
+        # on the function for more information
         api.object.prep_meshes(self.options)
         geometries = []
 
+        # now iterate over all the extracted mesh nodes and parse each one
         for mesh in api.object.extracted_meshes():
             logger.info('Parsing geometry %s', mesh)
             geo = geometry.Geometry(mesh, self)

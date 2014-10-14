@@ -27,6 +27,10 @@ ROTATE_X_PI2 = mathutils.Quaternion((1.0, 0.0, 0.0),
     math.radians(-90.0)).to_matrix().to_4x4()
 
 
+# Blender doesn't seem to have a good way to link a mesh back to the
+# objects that are instancing it, or it is bloody obvious and I haven't
+# discovered yet. This manifest serves as a way for me to map a mesh
+# node to the object nodes that are using it.
 _MESH_MAP = {}
 
 
@@ -153,6 +157,7 @@ def node_type(obj):
 def nodes(valid_types, options):
     visible_layers = _visible_scene_layers()
     for obj in data.objects:
+        # skip objects that are not on visible layers
         if not _on_visible_layer(obj, visible_layers): 
             continue
         try:
@@ -246,11 +251,18 @@ def visible(obj):
 def extract_mesh(obj, options, recalculate=False):
     logger.debug('object.extract_mesh(%s, %s)', obj, options)
     mesh = obj.to_mesh(context.scene, True, RENDER)
+
+    # transfer the geometry type to the extracted mesh
     mesh.threeio_geometry_type = obj.data.threeio_geometry_type
 
+    # now determine whether or not to export using the geometry type
+    # set globally from the exporter's options or to use the local
+    # override on the mesh node itself
     opt_buffer = options.get(constants.GEOMETRY_TYPE) 
     opt_buffer = opt_buffer == constants.BUFFER_GEOMETRY
     prop_buffer = mesh.threeio_geometry_type == constants.BUFFER_GEOMETRY
+
+    # if doing buffer geometry it is imperative to triangulate the mesh
     if opt_buffer or prop_buffer:
         original_mesh = obj.data
         obj.data = mesh
@@ -265,6 +277,9 @@ def extract_mesh(obj, options, recalculate=False):
         obj.data = original_mesh
         obj.select = False
 
+    # recalculate the normals to face outwards, this is usually
+    # best after applying a modifiers, especialy for something 
+    # like the mirror
     if recalculate:
         logger.info('Recalculating normals')
         original_mesh = obj.data
@@ -282,6 +297,7 @@ def extract_mesh(obj, options, recalculate=False):
         xrot = mathutils.Matrix.Rotation(-math.pi/2, 4, 'X')
         mesh.transform(xrot * obj.matrix_world)
 
+    # now generate a unique name
     index = 0
     while True:
         if index is 0:
@@ -314,6 +330,12 @@ def objects_using_mesh(mesh):
 
 
 def prep_meshes(options):
+    '''
+    Prep the mesh nodes. Preperation includes identifying:
+        - nodes that are on visible layers
+        - nodes that have export disabled
+        - nodes that have modifiers that need to be applied
+    '''
     logger.debug('object.prep_meshes(%s)', options)
     mapping = {}
 
@@ -323,14 +345,22 @@ def prep_meshes(options):
         if obj.type != MESH: 
             continue
 
+        # this is ideal for skipping controller or proxy nodes
+        # that may apply to a Blender but not a 3js scene
         if not _on_visible_layer(obj, visible_layers): 
             logger.info('%s is not on a visible layer', obj.name)
             continue
 
+        # if someone really insists on a visible node not being exportable
         if not obj.threeio_export: 
             logger.info('%s export is disabled', obj.name)
             continue
 
+        # need to apply modifiers before moving on, and before
+        # handling instancing. it is possible for 2 or more objects
+        # instance the same mesh but to not all use the same modifiers
+        # this logic identifies the object with modifiers and extracts
+        # the mesh making the mesh unique to this particular object
         if len(obj.modifiers):
             logger.info('%s has modifiers' % obj.name)
             mesh = extract_mesh(obj, options, recalculate=True)
@@ -341,7 +371,9 @@ def prep_meshes(options):
             obj.name, obj.data.name)
         manifest = mapping.setdefault(obj.data.name, [])
         manifest.append(obj)
-
+    
+    # now associate the extracted mesh node with all the objects
+    # that are instancing it
     for objects in mapping.values():
         mesh = extract_mesh(objects[0], options)
         _MESH_MAP[mesh.name] = objects

@@ -17,14 +17,14 @@ SETTINGS_FILE_EXPORT = 'threeio_settings_export.js'
 
 bl_info = {
     'name': 'ThreeIO',
-    'author': 'Ed Caspersen',
-    'version': (0, 5, 0),
-    'blender': (2, 7, 1),
+    'author': 'Ed Caspersen (repsac)',
+    'version': (1, 0, 0),
+    'blender': (2, 7, 2),
     'location': 'File > Import-Export',
     'description': 'Export ThreeJs scenes',
     'warning': '',
-    'wiki_url': 'https://github.com/repsac/threeio/wiki',
-    'tracker_url':  'https://github.com/repsac/threeio/issues',
+    'wiki_url': 'https://github.com/mrdoob/three.js/wiki',
+    'tracker_url':  'https://github.com/mrdoob/three.js/issues',
     'category': 'Import-Export'
 }
 
