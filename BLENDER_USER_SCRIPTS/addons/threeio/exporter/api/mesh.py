@@ -681,6 +681,10 @@ def _skeletal_animations(armature, options):
 
     #@TODO need key constants
     for bone in armature.data.bones:
+        if bone.use_deform is False:
+            logger.info('Skipping animation data for bone %s', bone.name)
+            continue
+
         logger.info('Parsing animation data for bone %s', bone.name)
 
         keys = []
