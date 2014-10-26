@@ -35,10 +35,12 @@ def bones(mesh):
     if not armature: return
 
     bones = []
+    bone_count = 0
+    bone_map = {}
     for bone in armature.data.bones:
         logger.info('Parsing bone %s', bone.name)
 
-        if bone.parent is None:
+        if bone.parent is None or bone.parent.use_deform is False:
             bone_pos = bone.head_local
             bone_index = -1
         else:
@@ -47,7 +49,7 @@ def bones(mesh):
             index = 0
             for parent in armature.data.bones:
                 if parent.name == bone.parent.name:
-                    bone_index = index
+                    bone_index = bone_map.get(index)
                 index += 1
 
         bone_world_pos = armature.matrix_world * bone_pos
@@ -55,14 +57,25 @@ def bones(mesh):
         y_axis = bone_world_pos.z
         z_axis = -bone_world_pos.y
 
-        bones.append({
-            constants.PARENT: bone_index,
-            constants.NAME: bone.name,
-            constants.POS: (x_axis, y_axis, z_axis),
-            constants.ROTQ: (0,0,0,1)
-        })
+        bone_index_rel = len(bones)
+        if bone.use_deform:
+            logger.debug('Adding bone %s at: %s, %s', bone.name, bone_index, bone_index_rel)
+            bone_map[bone_count] = bone_index_rel
+            bones.append({
+                constants.PARENT: bone_index,
+                constants.NAME: bone.name,
+                constants.POS: (x_axis, y_axis, z_axis),
+                constants.ROTQ: (0,0,0,1)
+            })
+        else:
+            logger.debug('Ignoring bone %s at: %s, %s', bone.name, bone_index, bone_index_rel)
 
-    return bones
+        bone_count += 1
+
+    return {
+        constants.BONES: bones,
+        constants.BONE_MAP: bone_map
+    }
 
 
 @_mesh
@@ -362,15 +375,15 @@ def normals(mesh, options):
 
 
 @_mesh
-def skin_weights(mesh):
+def skin_weights(mesh, bone_map):
     logger.debug('mesh.skin_weights(%s)', mesh)
-    return _skinning_data(mesh, 1)
+    return _skinning_data(mesh, bone_map, 1)
 
 
 @_mesh
-def skin_indices(mesh):
+def skin_indices(mesh, bone_map):
     logger.debug('mesh.skin_indices(%s)', mesh)
-    return _skinning_data(mesh, 0)
+    return _skinning_data(mesh, bone_map, 0)
 
 
 @_mesh
@@ -615,7 +628,7 @@ def _armature(mesh):
     return armature
 
 
-def _skinning_data(mesh, array_index):
+def _skinning_data(mesh, bone_map, array_index):
     armature = _armature(mesh)
     if not armature: return
 
@@ -639,7 +652,7 @@ def _skinning_data(mesh, array_index):
                 if bone.name != obj.vertex_groups[bone_array[index][0]].name:
                     continue
                 if array_index is 0:
-                    entry = bone_index
+                    entry = bone_map.get(bone_index)
                 else:
                     entry = bone_array[index][1]
 

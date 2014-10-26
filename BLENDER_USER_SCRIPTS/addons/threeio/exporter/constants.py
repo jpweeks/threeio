@@ -12,6 +12,7 @@ from ..constants import  (
     FACES,
     NORMALS,
     BONES,
+    BONE_MAP,
     UVS,
     COLORS,
     MIX_COLORS,
